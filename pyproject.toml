@@ -1,0 +1,30 @@
+[build-system]
+requires = ["setuptools", "setuptools-scm"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "gevopy"
+description = "Genetics for Evolutionary Algorithms in Python."
+readme = "README.md"
+requires-python = ">=3.10"
+license = {text = "GNU General Public License v3 (GPLv3)"}
+classifiers = [
+    "Programming Language :: Python :: 3",
+    "License :: OSI Approved :: GNU General Public License v3 (GPLv3)",
+    "Operating System :: OS Independent",
+]
+dynamic = ["version", "dependencies"]
+
+[project.urls]
+"Homepage" = "https://github.com/BorjaEst/gevopy/"
+"Bug Tracker" = "https://github.com/BorjaEst/gevopy/issues"
+
+[tool.setuptools.dynamic]
+version = {file = "src/gevopy/VERSION"}
+dependencies = {file = ["requirements.txt"]}
+
+[tool.pytest.ini_options]
+addopts = ["--import-mode=importlib"]
+
+[tool.pylint.messages_control]
+extension-pkg-whitelist = "pydantic"
