@@ -1,0 +1,7 @@
+# This requirements are for development and testing only, not for production.
+-r requirements.txt
+pytest
+pytest-xdist
+pytest-cov
+flake8
+black
