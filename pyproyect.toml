@@ -26,5 +26,5 @@ dependencies = {file = ["requirements.txt"]}
 [tool.pytest.ini_options]
 addopts = ["--import-mode=importlib"]
 
-[tool.pylint.'MESSAGES CONTROL']
+[tool.pylint.messages_control]
 extension-pkg-whitelist = "pydantic"
