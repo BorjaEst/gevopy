@@ -50,6 +50,14 @@ class Chromosome(np.ndarray, MutableSequence):
         if obj is None:
             return
 
+    def insert(self, index, value):
+        """Method insert is unsupported on chromosome types"""
+        raise AttributeError(f"Unsupported operation by '{self.__class__}'")
+
+    def __delitem__(self, index):
+        """Method delitem is unsupported on chromosome types"""
+        raise AttributeError(f"Unsupported operation by '{self.__class__}'")
+
     def __mutate__(self):
         """Performs the chromosome mutation operation.
         :return: Chromosome with mutated values
@@ -200,7 +208,7 @@ class GenotypeModel(BaseModel):
     generation: PositiveInt = Field(default=1)
     score: float = None
 
-    class Config:
+    class Config:  # pylint: disable=missing-class-docstring
         json_encoders = {Chromosome: lambda x: x.astype("uint8").tolist()}
 
     def clone(self):
@@ -218,7 +226,4 @@ class GenotypeModel(BaseModel):
         together with the phenotype id.
         :return: String representing the genotype instance (phenotype)
         """
-        return "{name} {id}".format(
-            name=self.__class__.__name__,
-            id=self.id,
-        )
+        return f"{self.__class__.__name__} {self.id}"
