@@ -208,7 +208,7 @@ class GenotypeModel(BaseModel):
     generation: PositiveInt = Field(default=1)
     score: float = None
 
-    class Config:  # pylint: disable=missing-class-docstring
+    class Config:  # pylint: disable=missing-class-docstring,too-few-public-methods
         json_encoders = {Chromosome: lambda x: x.astype("uint8").tolist()}
 
     def clone(self):
