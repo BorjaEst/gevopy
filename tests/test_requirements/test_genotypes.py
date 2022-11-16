@@ -13,7 +13,7 @@ from gevopy import genetics
 # Module fixtures ---------------------------------------------------
 @fixture(scope="class")
 def clone(phenotype):
-    """Returns a phenotype clone"""
+    """Fixture to return a phenotype clone"""
     return phenotype.clone()
 
 
