@@ -21,6 +21,30 @@ def genotype(request):
 
 
 @fixture(scope="package")
-def phenotype(phenotype_gen):
+def phenotype(genotype):
     """Fixture to return a phenotype instance"""
-    return phenotype_gen()
+    return genotype()
+
+
+@fixture(scope="package", params=[10, 20])
+def population_size(request):
+    """Parametrization for the number of phenotypes in the population"""
+    return request.param
+
+
+@fixture(scope="package")
+def population_gen(genotype, population_size):
+    """Fixture to return the population generator"""
+    return lambda: [genotype() for _ in range(population_size)]
+
+
+@fixture(scope="class")
+def population(population_gen):
+    """Fixture to return a population instance"""
+    return population_gen()
+
+
+@fixture(scope="class", params=[1, 5, 20])
+def selection_size(request):
+    """Parametrization for the number of phenotypes to select"""
+    return request.param
