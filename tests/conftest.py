@@ -44,6 +44,12 @@ def population(population_gen):
     return population_gen()
 
 
+@fixture(scope="class", params=[0.2])
+def mutpb(request):
+    """Parametrization for the mutation probability"""
+    return request.param
+
+
 @fixture(scope="class", params=[1, 5, 20])
 def selection_size(request):
     """Parametrization for the number of phenotypes to select"""
