@@ -65,11 +65,18 @@ class Chromosome(np.ndarray, MutableSequence):
         raise NotImplementedError
 
     def __eq__(self, other):
-        """Standard python method to compares 2 chromosomes.
+        """Standard python method to compares 2 chromosomes equality.
         :param other: Chromosome to compare with
         :return: Boolean, True if are equal, otherwise False
         """
         return np.array_equal(self, other)
+
+    def __ne__(self, other):
+        """Standard python method to compares 2 chromosomes non equality.
+        :param other: Chromosome to compare with
+        :return: Boolean, True if are different, otherwise False
+        """
+        return ~self.__eq__(other)
 
     def __cross__(self, other):
         """Magic method to compare a chromosome bitwise.
