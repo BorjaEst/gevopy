@@ -14,7 +14,7 @@ import inspect
 import itertools
 import math
 import random
-from abc import abstractmethod
+from abc import ABC, abstractmethod
 
 import numpy as np
 
@@ -24,17 +24,12 @@ methods = {"Ponderated", "Uniform", "Best", "Worst", "Tournaments"}
 __all__ = methods.union({"Selection"})
 
 
-class Selection(object):
+class Selection(ABC):
     """A generic selection objext that returns an specific amount of phenotypes
     from a pool according to their scores. The main objective of this
     selection procedure is to keep, crossover or mutate only those phenotypes
     that perform better on the solution of a problem or environment.
     """
-
-    @abstractmethod
-    def __init__(self):
-        """Selection generic constructor."""
-        raise NotImplementedError
 
     @abstractmethod
     def __call__(self, pool, n):
@@ -51,9 +46,6 @@ class Ponderated(Selection):
     ponderated by the normalized score (score[i]/sum(scores)). The list
     returned contains references to the *pool phenotypes*.
     """
-
-    def __init__(self):
-        """Selection generic constructor."""
 
     def __call__(self, pool, n):
         """Executes the selection of 'n' phenotypes from a pool.
@@ -86,9 +78,6 @@ class Uniform(Selection):
     equal. The list returned contains references to the *pool phenotypes*.
     """
 
-    def __init__(self):
-        """Selection generic constructor."""
-
     def __call__(self, pool, n):
         """Executes the selection of 'n' phenotypes from a pool.
         :param pool: A Pool of phenotypes.
@@ -111,9 +100,6 @@ class Best(Selection):
     The returned list contains references to the input *phenotype*.
     """
 
-    def __init__(self):
-        """Selection generic constructor."""
-
     def __call__(self, pool, n):
         """Executes the selection of 'n' phenotypes from a pool.
         :param pool: A Pool of phenotypes.
@@ -135,9 +121,6 @@ class Worst(Selection):
     """Returns the worst phenotype among the input *phenotypes* `n` times.
     The returned list contains references to the input *phenotype*.
     """
-
-    def __init__(self):
-        """Selection generic constructor."""
 
     def __call__(self, pool, n):
         """Executes the selection of 'n' phenotypes from a pool.
@@ -182,14 +165,6 @@ class Tournaments(Selection):
                 raise ValueError(
                     "Type for 'tournsize' must be 'int' or 'callable'")
 
-    def aspirants(self, pool, n):
-        """Collects a random list of aspirants with their score.
-        :param pool: A Pool of phenotypes
-        :param n: The number of phenotypes to select
-        :returns: A list of random phenotypes with their score
-        """
-        return Uniform.__call__(self, pool, n)
-
     def __call__(self, pool, n):
         """Executes the selection of 'n' phenotypes from a pool.
         :param pool: A Pool of phenotypes.
@@ -205,5 +180,5 @@ class Tournaments(Selection):
                 raise ValueError("Value for 'n' cannot be lower than 1")
 
         tournsize = self.tournsize(n)
-        tournaments = [self.aspirants(pool, tournsize) for _ in range(n)]
-        return [max(x, key=lambda x: x.score) for x in tournaments]
+        aspirants = [Uniform.__call__(self, pool, tournsize) for _ in range(n)]
+        return [max(x, key=lambda x: x.score) for x in aspirants]
