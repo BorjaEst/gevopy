@@ -43,24 +43,24 @@ class ExecutionRequirements:
     def test_keeps_genotype(self, original, phenotype):
         """Test mutation does not alter phenotype"""
         assert isinstance(phenotype, genetics.GenotypeModel)
-        assert type(original) == type(phenotype)
+        assert type(original) is type(phenotype)
 
 
 # Parametrization ---------------------------------------------------
 class TestSinglePoint(AttrRequirements, ExecutionRequirements):
     """Parametrization for 'SinglePoint' mutation"""
 
-    @fixture(scope="class")
-    def mutation(self, mutpb):
+    @fixture(scope="class", params=[0.1, 0.2, 0.5])
+    def mutation(self, request):
         """Parametrization to define the mutation method to use"""
-        return mutation.SinglePoint(mutpb=mutpb)
+        return mutation.SinglePoint(mutpb=request.param)
 
-    @mark.parametrize("mutpb", [0.0], indirect=True)
+    @mark.parametrize("mutation", [0.0], indirect=True)
     def test_mutpb_000(self, original, phenotype):
         """Tests that no mutation does not modity chromosome"""
         assert original.chromosome == phenotype.chromosome
         
-    @mark.parametrize("mutpb", [1.0], indirect=True)
+    @mark.parametrize("mutation", [1.0], indirect=True)
     def test_mutpb_100(self, original, phenotype):
         """Tests that mutation does modity chromosome"""
         assert original.chromosome != phenotype.chromosome
