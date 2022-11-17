@@ -94,6 +94,5 @@ class SinglePoint(Mutation):
         """Executes the mutation. The chromosome chain is modified in place.
         :param chromosome: Chromosome to be mutated
         """
-        assert isinstance(chromosome, np.ndarray)
         mask = np.random.random(chromosome.size) <= self.mutation_probability
         chromosome[mask] = chromosome[mask].__mutate__()
