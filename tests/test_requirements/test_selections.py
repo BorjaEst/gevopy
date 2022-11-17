@@ -1,7 +1,7 @@
 """Module to test selection operations for evolution algorithms."""
 # pylint: disable=redefined-outer-name
 
-import inspect
+from inspect import signature
 
 from pytest import fixture, mark
 
@@ -33,12 +33,9 @@ class AttrRequirements:
     """Tests group for Selection instances attributes"""
 
     def test_is_callable(self, selection):
-        """Test selection is a callable object"""
+        """Test selection is a callable with arity 2"""
         assert callable(selection)
-
-    def test_call_arity(self, selection):
-        """Test selection call arity is 2"""
-        assert len(inspect.signature(selection).parameters) == 2
+        assert len(signature(selection).parameters) == 2
 
 
 class ExecutionRequirements:
