@@ -81,8 +81,8 @@ from gevopy import algorithms
 my_algorithm=algorithms.Survival(
     selection=selection.Tournaments(tournsize=3),
     mating=selection.Best(),
-    crossover=crossover.TwoPoint(indpb=0.8),
-    mutation=mutation.SinglePoint(indpb=0.5, mutpb=0.2),
+    crossover=crossover.Uniform(indpb=0.01),
+    mutation=mutation.SinglePoint(mutpb=0.2),
     survival_rate=0.40,
 )
 ```
