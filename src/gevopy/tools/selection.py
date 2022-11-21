@@ -14,6 +14,7 @@ import inspect
 import itertools
 import math
 import random
+import types
 from abc import ABC, abstractmethod
 
 import numpy as np
@@ -58,8 +59,8 @@ class Ponderated(Selection):
                 raise ValueError("Expected type 'Pool' for 'pool'")
             case _ if not isinstance(n, int):
                 raise ValueError("Expected type 'int' for 'n'")
-            case _ if not n >= 1:
-                raise ValueError("Value for 'n' cannot be lower than 1")
+            case _ if not n >= 0:
+                raise ValueError("Value for 'n' cannot be lower than 0")
 
         sum_scores = sum(pool.scores())
         try:  # Divide R[0,1] segment with normalised phenotypes weigths
@@ -89,8 +90,8 @@ class Uniform(Selection):
                 raise ValueError("Expected type 'Pool' for 'pool'")
             case _ if not isinstance(n, int):
                 raise ValueError("Expected type 'int' for 'n'")
-            case _ if not n >= 1:
-                raise ValueError("Value for 'n' cannot be lower than 1")
+            case _ if not n >= 0:
+                raise ValueError("Value for 'n' cannot be lower than 0")
 
         return [random.choice(pool) for _ in range(n)]
 
@@ -111,8 +112,8 @@ class Best(Selection):
                 raise ValueError("Expected type 'Pool' for 'pool'")
             case _ if not isinstance(n, int):
                 raise ValueError("Expected type 'int' for 'n'")
-            case _ if not n >= 1:
-                raise ValueError("Value for 'n' cannot be lower than 1")
+            case _ if not n >= 0:
+                raise ValueError("Value for 'n' cannot be lower than 0")
 
         return [pool[0] for _ in range(n)]
 
@@ -133,8 +134,8 @@ class Worst(Selection):
                 raise ValueError("Expected type 'Pool' for 'pool'")
             case _ if not isinstance(n, int):
                 raise ValueError("Expected type 'int' for 'n'")
-            case _ if not n >= 1:
-                raise ValueError("Value for 'n' cannot be lower than 1")
+            case _ if not n >= 0:
+                raise ValueError("Value for 'n' cannot be lower than 0")
 
         return [pool[-1] for _ in range(n)]
 
@@ -157,9 +158,9 @@ class Tournaments(Selection):
                     "Value for 'tournsize' cannot be lower than 1")
             case builtins.int:
                 self.tournsize = lambda _: tournsize
-            case builtins.callable if len(inspect.signature(tournsize).parameters) != 1:
+            case types.LambdaType if len(inspect.signature(tournsize).parameters) != 1:
                 raise ValueError("Arity for 'tournsize' must be 1")
-            case builtins.callable:
+            case types.LambdaType:
                 self.tournsize = tournsize
             case _wrong_type:
                 raise ValueError(
@@ -176,8 +177,8 @@ class Tournaments(Selection):
                 raise ValueError("Expected type 'Pool' for 'pool'")
             case _ if not isinstance(n, int):
                 raise ValueError("Expected type 'int' for 'n'")
-            case _ if not n >= 1:
-                raise ValueError("Value for 'n' cannot be lower than 1")
+            case _ if not n >= 0:
+                raise ValueError("Value for 'n' cannot be lower than 0")
 
         tournsize = self.tournsize(n)
         aspirants = [Uniform.__call__(self, pool, tournsize) for _ in range(n)]

@@ -5,6 +5,9 @@ import random
 
 from pytest import fixture
 
+from gevopy.tools import crossover as crossover_tools
+from gevopy.tools import mutation as mutation_tools
+from gevopy.tools import selection as selection_tools
 from tests import genotypes
 
 
@@ -44,7 +47,7 @@ def population(population_gen):
     return population_gen()
 
 
-@fixture(scope="class", params=[1, 5, 20])
+@fixture(scope="class", params=[0, 1, 5, 20])
 def selection_size(request):
     """Parametrization for the number of phenotypes to select"""
     return request.param
