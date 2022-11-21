@@ -45,6 +45,14 @@ class ExecutionRequirements:
         assert isinstance(phenotype, genetics.GenotypeModel)
         assert type(original) is type(phenotype)
 
+    def test_mutated_diff(self,  original, phenotype):
+        """Test mutation returns different object than phenotype"""
+        assert not original is phenotype
+
+    def test_all_ids_keep(self,  original, phenotype):
+        """Test mutation does not alter phenotype id"""
+        assert original.id == phenotype.id
+
 
 # Parametrization ---------------------------------------------------
 class TestSinglePoint(AttrRequirements, ExecutionRequirements):
@@ -59,7 +67,7 @@ class TestSinglePoint(AttrRequirements, ExecutionRequirements):
     def test_mutpb_000(self, original, phenotype):
         """Tests that no mutation does not modity chromosome"""
         assert original.chromosome == phenotype.chromosome
-        
+
     @mark.parametrize("mutation", [1.0], indirect=True)
     def test_mutpb_100(self, original, phenotype):
         """Tests that mutation does modity chromosome"""

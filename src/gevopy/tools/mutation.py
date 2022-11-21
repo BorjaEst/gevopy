@@ -9,6 +9,7 @@ https://github.com/DEAP/deap/blob/master/deap/tools/mutation.py
 # pylint: disable=too-few-public-methods
 
 from abc import ABC, abstractmethod
+from copy import deepcopy
 
 import numpy as np
 
@@ -47,9 +48,9 @@ class Mutation(ABC):
             case _ if not isinstance(phenotype, genetics.GenotypeModel):
                 raise ValueError("Expected 'GenotypeModel' for 'phenotype'")
 
-        clone = phenotype.clone()
-        self.mutate_features(clone.__dict__.values())
-        return clone
+        phenotype_copy = deepcopy(phenotype)
+        self.mutate_features(phenotype_copy.__dict__.values())
+        return phenotype_copy
 
     def mutate_features(self, features):
         """Recursively mutates phenotype features. For example a list of

@@ -78,9 +78,9 @@ arguments and steps.
 from gevopy.tools import crossover, mutation, selection
 from gevopy import algorithms
 
-my_algorithm=algorithms.Survival(
-    selection=selection.Tournaments(tournsize=3),
-    mating=selection.Best(),
+my_algorithm=algorithms.Standard(
+    selection1=selection.Tournaments(tournsize=3),
+    selection2=selection.Uniform(),
     crossover=crossover.Uniform(indpb=0.01),
     mutation=mutation.SinglePoint(mutpb=0.2),
     survival_rate=0.40,
