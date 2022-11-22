@@ -58,7 +58,7 @@ class MyFitness1(fitness.FitnessModel):
 
 fx = MyFitness1(cache=True, parallel=True)
 ```
-> You can additionally define `setUp` as method to execute once at the begining
+> You can additionally define `setup` as method to execute once at the begining
 of each generation before phenotypes are evaluated.
 
 ### Algorithm
