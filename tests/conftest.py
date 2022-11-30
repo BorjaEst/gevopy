@@ -2,8 +2,11 @@
 # pylint: disable=redefined-outer-name
 
 import random
+import uuid
 
-from pytest import fixture
+from neo4j import GraphDatabase
+from neo4j.exceptions import ServiceUnavailable
+from pytest import fixture, skip
 
 from gevopy.tools import crossover as crossover_tools
 from gevopy.tools import mutation as mutation_tools
@@ -11,10 +14,23 @@ from gevopy.tools import selection as selection_tools
 from tests import genotypes
 
 
-@fixture(scope="function", autouse=True)
-def set_random_seed():
-    """Fix the random seed for repeatable testing"""
-    random.seed(1)
+@fixture(scope="session")
+def driver():
+    """Fixture to generate a neo4j database driver"""
+    driver = GraphDatabase.driver("bolt://localhost:7687")
+    try:
+        driver.verify_connectivity()
+        yield driver
+    except ServiceUnavailable as err:
+        skip(f"Database service unavailable {err}")
+    finally:
+        driver.close()
+
+
+@fixture(scope="class")
+def experiment():
+    """Fixture to generate an experiment name for testing"""
+    return f"Experiment_{uuid.uuid4()}"
 
 
 @fixture(scope="package", params=["OneHaploid", "OneDiploid"])
@@ -81,3 +97,9 @@ def mutation(request):
 def survival_rate(request):
     """Parametrization for the number of phenotypes to survive"""
     return request.param
+
+
+@fixture(scope="function", autouse=True)
+def set_random_seed():
+    """Fix the random seed for repeatable testing"""
+    random.seed(1)
