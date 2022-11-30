@@ -17,6 +17,13 @@ jobs:
       fail-fast: false
       matrix:
         python-version: ["3.10"]
+    services:
+      neo4j:
+        image: neo4j:5.2.0
+        env:
+          NEO4J_AUTH: none
+        ports:
+          - 7687:7687
 
     steps:
     - uses: actions/checkout@v3

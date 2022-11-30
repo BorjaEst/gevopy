@@ -9,6 +9,7 @@ depending on the complexity of your genetic model.
 """
 
 import copy
+import json
 import uuid
 from datetime import datetime
 from typing import List, MutableSequence
@@ -215,12 +216,23 @@ class GenotypeModel(BaseModel):
     generation: PositiveInt = Field(default=1)
     score: float = None
 
-    class Config:  # pylint: disable=missing-class-docstring,too-few-public-methods
+    class Config:
+        # pylint: disable=missing-class-docstring
+        # pylint: disable=too-few-public-methods
         json_encoders = {Chromosome: lambda x: x.astype("uint8").tolist()}
 
+    def dict(self, *args, serialize=False, **kwargs):
+        """Returns the phenotype serialized and in dict form,
+        :return: Serialized dictionary
+        """
+        # TODO: This is really slow, improve round trip, see
+        # https://github.com/pydantic/pydantic/issues/1409#issuecomment-650116116
+        if serialize:
+            return json.loads(self.json())
+        return super().dict(*args, **kwargs)
+
     def clone(self):
-        """Clones the phenotype producing a copy with different id and
-        an empty score.
+        """Copies the phenotype using a different id and empty score.
         :return: Phenotype copy
         """
         clone = copy.deepcopy(self)
