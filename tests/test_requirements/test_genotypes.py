@@ -8,6 +8,7 @@ from datetime import datetime
 from pytest import fixture
 
 from gevopy import genetics
+from tests import genotypes
 
 
 # Module fixtures ---------------------------------------------------
@@ -81,7 +82,7 @@ class CloneRequirements:
 class TestGenotype(AttrRequirements, CloneRequirements):
     """Parametrization for testing Genotypes"""
 
-    @fixture(scope="class")
-    def phenotype(self, genotype):
+    @fixture(scope="class", params=["OneHaploid", "OneDiploid"])
+    def phenotype(self, request):
         """Fixture to return a genotype instance"""
-        return genotype()
+        return genotypes.__dict__[request.param]()

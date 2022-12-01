@@ -154,8 +154,7 @@ class Tournaments(Selection):
         """
         match type(tournsize):
             case builtins.int if tournsize <= 1:
-                raise ValueError(
-                    "Value for 'tournsize' cannot be lower than 1")
+                raise ValueError("'tournsize' cannot be lower than 1")
             case builtins.int:
                 self.tournsize = lambda _: tournsize
             case types.LambdaType if len(inspect.signature(tournsize).parameters) != 1:
@@ -163,8 +162,7 @@ class Tournaments(Selection):
             case types.LambdaType:
                 self.tournsize = tournsize
             case _wrong_type:
-                raise ValueError(
-                    "Type for 'tournsize' must be 'int' or 'callable'")
+                raise ValueError("'tournsize' must be 'int' or 'LambdaType'")
 
     def __call__(self, pool, n):
         """Executes the selection of 'n' phenotypes from a pool.
