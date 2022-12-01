@@ -1,5 +1,6 @@
 """Module to test fitness requirements for evolution algorithms"""
 # pylint: disable=redefined-outer-name
+# pylint: disable=unused-argument
 
 from inspect import ismethod, signature
 
@@ -22,7 +23,7 @@ def scheduler(request):
 
 
 @fixture(scope="class")
-def scores(population, use_fitness):  # pylint: disable=unused-argument
+def scores(population, use_fitness):
     """Fixture to return population scores"""
     return [ph.score for ph in population]
 
