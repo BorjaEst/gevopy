@@ -25,6 +25,10 @@ dependencies = {file = ["requirements.txt"]}
 
 [tool.pytest.ini_options]
 addopts = ["--import-mode=importlib"]
+env = [
+    "TESTING_NEO4J_URI=bolt://localhost:7687",
+    "TESTING_NEO4J_AUTH=",
+]
 
 [tool.pylint.messages_control]
 extension-pkg-whitelist = "pydantic"
