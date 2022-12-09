@@ -12,7 +12,7 @@ module_logger = logging.getLogger(__name__)
 
 # Database interfaces -----------------------------------------------
 
-class AbstractInterface(abc.ABC):
+class Interface(abc.ABC):
     """Abstract class for Database Interface Object."""
 
     @abc.abstractmethod
@@ -31,6 +31,17 @@ class AbstractInterface(abc.ABC):
         :return: True if closed, otherwise False
         """
         raise NotImplementedError
+
+    @classmethod
+    def __get_validators__(cls):
+        yield cls.class_validator
+
+    @classmethod
+    def class_validator(cls, value):
+        """Validates the value is a correct Interface type."""
+        if not isinstance(value, cls):
+            raise TypeError("'Interface' type required")
+        return value
 
     # abc.abstractcontextmanagermethod
     def session(self, *args, **kwds):
@@ -62,7 +73,7 @@ class AbstractInterface(abc.ABC):
         raise NotImplementedError
 
 
-class Neo4jInterface(AbstractInterface):
+class Neo4jInterface(Interface):
     """Neo4j database interface as evolution graph. It replacess all neo4j
     session methods by customised transactions ready to execute.
 
@@ -131,7 +142,7 @@ class Neo4jInterface(AbstractInterface):
         return container.session.execute_read(get_phenotypes, ids)
 
 
-class EmptyInterface(AbstractInterface):
+class EmptyInterface(Interface):
     """Neo4j database interface as evolution graph. It replacess all neo4j
     session methods by customised transactions ready to execute.
 
@@ -244,7 +255,7 @@ class AbstractSession(abc.ABC):
 
 
 class SessionContainer(AbstractSession):
-    """Generic Database session interface"""
+    """Generic Database Session Container for Database Interface"""
 
     @property
     def in_session(self):
