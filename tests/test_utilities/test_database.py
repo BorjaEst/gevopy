@@ -1,6 +1,5 @@
 """Module to test database operations for evolution algorithms."""
 # pylint: disable=redefined-outer-name
-# pylint: disable=unused-argument
 
 from pytest import fixture
 

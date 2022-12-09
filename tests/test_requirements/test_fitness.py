@@ -6,8 +6,6 @@ from inspect import ismethod, signature
 
 from pytest import fixture, mark
 
-from tests import fitnesses
-
 
 # Module fixtures ---------------------------------------------------
 @fixture(scope="class", params=[False, True])
@@ -78,8 +76,7 @@ class ExecutionRequirements:
 class TestFitness(AttrRequirements, ExecutionRequirements):
     """Parametrization for testing using TimeFitness"""
 
-    @fixture(scope="class", params=["TimeFitness"])
-    def fitness(self, request, use_cache, scheduler):
+    @fixture(scope="class")
+    def fitness(self, fitness, use_cache, scheduler):
         """Parametrization to define the fitness method to use"""
-        fitness = fitnesses.__dict__[request.param]
         return fitness(cache=use_cache, scheduler=scheduler)

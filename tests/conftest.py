@@ -52,7 +52,7 @@ def fitness(request):
     return examples.evaluation.__dict__[request.param]
 
 
-@fixture(scope="class", params=["basic_uniform", "basic_ponderated"])
+@fixture(scope="class", params=["BasicUniform", "BasicPonderated"])
 def algorithm(request):
     """Fixture to return the algorithm definition from example"""
     return examples.algorimths.__dict__[request.param]

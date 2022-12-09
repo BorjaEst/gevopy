@@ -22,6 +22,12 @@ def pool(population):
     return Pool(population)
 
 
+@fixture(scope="class", params=[0, 1, 5, 20])
+def selection_size(request):
+    """Parametrization for the number of phenotypes to select"""
+    return request.param
+
+
 @fixture(scope="class")
 def selected(selection, pool, selection_size):
     """Fixture to return a selection of phenotypes"""
