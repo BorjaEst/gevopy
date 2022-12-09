@@ -48,7 +48,7 @@ class _HasScheduler():
     """Extend class Fitness dask scheduler properties."""
     scheduler_options = ['synchronous', 'threads', 'processes']
 
-    def __init__(self, *args, scheduler: str = "threading", **kwargs) -> None:
+    def __init__(self, *args, scheduler: str = "threads", **kwargs) -> None:
         """Generic constructor for fitness objects.
         :param scheduler: Dask scheduler to use during fitness evaluation
         """
@@ -130,3 +130,14 @@ class FitnessModel(_HasCache, _HasScheduler, ABC):
         :return: Phenotype score
         """
         raise NotImplementedError
+
+    @classmethod
+    def __get_validators__(cls):
+        yield cls.class_validator
+
+    @classmethod
+    def class_validator(cls, value):
+        """Validates the value is a correct FitnessModel type."""
+        if not isinstance(value, cls):
+            raise TypeError("'FitnessModel' type required")
+        return value
