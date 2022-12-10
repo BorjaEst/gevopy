@@ -78,13 +78,12 @@ arguments and steps.
 from gevopy.tools import crossover, mutation, selection
 from gevopy import algorithms
 
-my_algorithm=algorithms.Standard(
-    selection1=selection.Tournaments(tournsize=3),
-    selection2=selection.Uniform(),
-    crossover=crossover.Uniform(indpb=0.01),
-    mutation=mutation.SinglePoint(mutpb=0.2),
-    survival_rate=0.40,
-)
+class MyAlgorithm(algorithms.Standard):
+    selection1 = selection.Tournaments(tournsize=3)
+    selection2 = selection.Uniform()
+    crossover = crossover.Uniform(indpb=0.01)
+    mutation = mutation.SinglePoint(mutpb=0.2)
+
 ```
 > The modules `tools.crossover`, `tools.mutation` and `tools.selection` contain
 templates and utilities to simplify your algorithm definition.
@@ -100,20 +99,17 @@ The results of the experiment can be collected from the method output, calling
 instantiating the experiment to store all phenotypes during the execution.
 
 ```py
-import gevopy
+import gevopy as ea
 
-experiment = gevopy.SimpleEvolution(
-    population=[Genotype() for _ in range(20)],
-    fitness=MyFitness1(cache=True, parallel=True),
+experiment = ea.Experiment(
+    fitness=MyFitness(cached=True, schedule="synchronous"),
+    algorithm=MyAlgorithm(survival_rate=0.2),
 )
 
-experiment.run(
-    algorithm=my_algorithm,
-    max_generations=20,
-    max_score=12.0,
-)
+with experiment.session() as session:
+    session.add_phenotypes([MyGenotype() for _ in range(20)])
+    session.run(max_generations=20, max_score=10)
 
-best_phenotype = experiment.best()
 ```
 >The method `run` forces the evolution of the experiment which is updated on
 each cycle. After the method is completed, you can force again te evolution
