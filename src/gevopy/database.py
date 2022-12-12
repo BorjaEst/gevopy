@@ -6,8 +6,11 @@ import logging
 
 import neo4j
 
-# Database logger
+import gevopy.config
+
+# Database logger and configuration
 module_logger = logging.getLogger(__name__)
+config = gevopy.config.settings['database']
 
 
 # Database interfaces -----------------------------------------------
@@ -283,11 +286,7 @@ class SessionContainer(AbstractSession):
 
 # NEO4J Transactions ------------------------------------------------
 
-# Transactions constants definitions
-UNIT_TIMEOUT = 4
-
-
-@neo4j.unit_of_work(timeout=UNIT_TIMEOUT)
+@neo4j.unit_of_work(timeout=config['timeout'])
 def add_phenotypes(tx, phenotypes):
     """Transaction function to create new phenotypes in the database.
     :param tx: Neo4j transaction object
@@ -317,7 +316,7 @@ def add_phenotypes(tx, phenotypes):
     return [p['id'] for p in phenotypes]
 
 
-@neo4j.unit_of_work(timeout=UNIT_TIMEOUT)
+@neo4j.unit_of_work(timeout=config['timeout'])
 def get_phenotypes(tx, ids):
     """Transaction to returns the matching id phenotypes.
     :param tx: Neo4j transaction object
