@@ -99,3 +99,14 @@ class HallOfFame(Sequence):
         :return: Integer indicating the number of stored phenotypes
         """
         return len(self.__items)
+
+    @classmethod
+    def __get_validators__(cls):
+        yield cls.class_validator
+
+    @classmethod
+    def class_validator(cls, value):
+        """Validates the value is a correct HallOfFame type."""
+        if not isinstance(value, cls):
+            raise TypeError("'HallOfFame' type required")
+        return value

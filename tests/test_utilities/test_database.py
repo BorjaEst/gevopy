@@ -1,25 +1,21 @@
 """Module to test database operations for evolution algorithms."""
 # pylint: disable=redefined-outer-name
-# pylint: disable=unused-argument
-# TODO: Load database configuration from configuration file or .env
 
 from pytest import fixture
 
-from gevopy import database
-
 
 @fixture(scope="module", autouse=True)
-def session(driver):
+def session(db_interface):
     """Fixture to start a graph database session for testing"""
-    with database.GraphSession(driver) as session:
+    with db_interface.session() as session:
         yield session
 
 
 @fixture(scope="class", autouse=True)
-def add_experiment(population, experiment):
+def add_experiment(population, experiment_name):
     """Fixture to add experiment to some phenotypes"""
     for phenotype in population[::2]:
-        phenotype.experiment = experiment
+        phenotype.experiment = experiment_name
 
 
 @fixture(scope="class", autouse=True)

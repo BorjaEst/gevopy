@@ -3,55 +3,74 @@
 
 import random
 import uuid
+import os
 
 from neo4j import GraphDatabase
-from neo4j.exceptions import ServiceUnavailable
-from pytest import fixture, skip
+from pytest import fixture
+from gevopy.database import Neo4jInterface, EmptyInterface
 
-from gevopy.tools import crossover as crossover_tools
-from gevopy.tools import mutation as mutation_tools
-from gevopy.tools import selection as selection_tools
-from tests import genotypes
+import examples.algorimths
+import examples.evaluation
+import examples.genotypes
+
+NEO4J_DRIVER = dict(
+    uri=os.getenv('TESTING_NEO4J_URI'),
+    auth=os.getenv('TESTING_NEO4J_AUTH'),
+)
 
 
-@fixture(scope="session")
-def driver():
+@fixture(scope="session", params=[NEO4J_DRIVER])
+def driver_kwds(request):
     """Fixture to generate a neo4j database driver"""
-    driver = GraphDatabase.driver("bolt://localhost:7687")
-    try:
+    # pylint: disable=not-context-manager
+    with GraphDatabase.driver(**request.param) as driver:
         driver.verify_connectivity()
-        yield driver
-    except ServiceUnavailable as err:
-        skip(f"Database service unavailable {err}")
-    finally:
-        driver.close()
+    return request.param
+
+
+@fixture(scope="session", params=["Neo4jInterface"])
+def db_interface(request, driver_kwds):
+    """Fixture to return the experiment interface for the database"""
+    match request.param:
+        case "Neo4jInterface":
+            interface = Neo4jInterface(**driver_kwds)
+        case _default:
+            interface = EmptyInterface()
+    yield interface
+    interface.close()
+
+
+@fixture(scope="class", params=["Bacteria", "JackJumper"])
+def genotype(request):
+    """Fixture to return the phenotype generator from example"""
+    return examples.genotypes.__dict__[request.param]
+
+
+@fixture(scope="class", params=["Random"])
+def fitness(request):
+    """Fixture to return fitness class from example"""
+    return examples.evaluation.__dict__[request.param]
+
+
+@fixture(scope="class", params=["BasicUniform", "BasicPonderated"])
+def algorithm(request):
+    """Fixture to return the algorithm definition from example"""
+    return examples.algorimths.__dict__[request.param]
 
 
 @fixture(scope="class")
-def experiment():
+def experiment_name():
     """Fixture to generate an experiment name for testing"""
     return f"Experiment_{uuid.uuid4()}"
 
 
-@fixture(scope="package", params=["OneHaploid", "OneDiploid"])
-def genotype(request):
-    """Fixture to return the phenotype generator"""
-    return genotypes.__dict__[request.param]
-
-
-@fixture(scope="package")
-def phenotype(genotype):
-    """Fixture to return a phenotype instance"""
-    return genotype()
-
-
-@fixture(scope="package", params=[10, 20])
+@fixture(scope="class", params=[10, 20])
 def population_size(request):
     """Parametrization for the number of phenotypes in the population"""
     return request.param
 
 
-@fixture(scope="package")
+@fixture(scope="class")
 def population_gen(genotype, population_size):
     """Fixture to return the population generator"""
     return lambda: [genotype() for _ in range(population_size)]
@@ -61,42 +80,6 @@ def population_gen(genotype, population_size):
 def population(population_gen):
     """Fixture to return a population instance"""
     return population_gen()
-
-
-@fixture(scope="class", params=[0, 1, 5, 20])
-def selection_size(request):
-    """Parametrization for the number of phenotypes to select"""
-    return request.param
-
-
-@fixture(scope="class", params=["Uniform"])
-def selection1(request):
-    """Parametrization for the selection1 operation"""
-    return selection_tools.__dict__[request.param]()
-
-
-@fixture(scope="class", params=["Uniform"])
-def selection2(request):
-    """Parametrization for the selection2 operation"""
-    return selection_tools.__dict__[request.param]()
-
-
-@fixture(scope="class", params=["TwoPoint"])
-def crossover(request):
-    """Parametrization for the crossover operation"""
-    return crossover_tools.__dict__[request.param]()
-
-
-@fixture(scope="class", params=["SinglePoint"])
-def mutation(request):
-    """Parametrization for the mutation operation"""
-    return mutation_tools.__dict__[request.param]()
-
-
-@fixture(scope="class", params=[0.1, 0.5])
-def survival_rate(request):
-    """Parametrization for the number of phenotypes to survive"""
-    return request.param
 
 
 @fixture(scope="function", autouse=True)

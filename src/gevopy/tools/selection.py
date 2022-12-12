@@ -41,6 +41,17 @@ class Selection(ABC):
         """
         raise NotImplementedError
 
+    @classmethod
+    def __get_validators__(cls):
+        yield cls.class_validator
+
+    @classmethod
+    def class_validator(cls, value):
+        """Validates the value is a correct Selection type."""
+        if not isinstance(value, cls):
+            raise TypeError("'Selection' type required")
+        return value
+
 
 class Ponderated(Selection):
     """Select *n* random phenotypes where each phenotype probability is

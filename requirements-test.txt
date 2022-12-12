@@ -3,6 +3,7 @@
 pytest
 pytest-xdist
 pytest-cov
+pytest-env
 flake8
 black
 bandit

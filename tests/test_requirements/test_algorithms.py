@@ -15,6 +15,12 @@ def score_phenotypes(population):
         phenotype.score = index
 
 
+@fixture(scope="class")
+def result(algorithm, population):
+    """Fixture to run an algorithm cycle and return result"""
+    return algorithm(population)
+
+
 # Requirements ------------------------------------------------------
 class AttrRequirements:
     """Tests group for Algorithm instances attributes"""
@@ -69,30 +75,54 @@ class ExecutionRequirements:
 
 
 # Parametrization ---------------------------------------------------
-class TestStandard(AttrRequirements, ExecutionRequirements):
+class StdParameters:
+    """Parametrization for 'Standard' algorithm"""
+
+    @fixture(scope="class", params=["Ponderated", "Uniform"])
+    def selection1(self, request):
+        """Parametrization to assign the algorithm configuration to use"""
+        return selection.__dict__[request.param]()
+
+    @fixture(scope="class", params=["Uniform"])
+    def selection2(self, request):
+        """Parametrization to assign the algorithm configuration to use"""
+        return selection.__dict__[request.param]()
+
+    @fixture(scope="class", params=["TwoPoint"])
+    def crossover(self, request):
+        """Parametrization to assign the crossover operation to use"""
+        return crossover.__dict__[request.param]()
+
+    @fixture(scope="class", params=["SinglePoint"])
+    def mutation(self, request):
+        """Parametrization to assign the mutation operation to use"""
+        return mutation.__dict__[request.param]()
+
+    @fixture(scope="class", params=[0.2, 0.6])
+    def survival_rate(self, request):
+        """Parametrization to assign the number of phenotypes to survive"""
+        return request.param
+
+
+class TestStandard(StdParameters, AttrRequirements, ExecutionRequirements):
     """Parametrization for 'Standard' algorithm"""
 
     @fixture(scope="class")
     def selections(self, selection1, selection2):
-        """Parametrization to define the algorithm configuration to use"""
+        """Parametrization to define the selection configuration to use"""
         return dict(selection1=selection1, selection2=selection2)
 
     @fixture(scope="class")
     def evolution(self, crossover, mutation):
-        """Parametrization to define the algorithm configuration to use"""
+        """Parametrization to define the evolution configuration to use"""
         return dict(crossover=crossover, mutation=mutation)
 
     @fixture(scope="class")
-    def config(self, survival_rate):
-        """Parametrization to define the algorithm configuration to use"""
+    def extra(self, survival_rate):
+        """Parametrization to define the extra configuration to use"""
         return dict(survival_rate=survival_rate)
 
     @fixture(scope="class")
-    def algorithm(self, selections, evolution, config):
+    def algorithm(self, selections, evolution, extra):
         """Parametrization to define the algorithm configuration to use"""
-        return algorithms.Standard(**selections, **evolution, **config)
-
-    @fixture(scope="class")
-    def result(self, algorithm, population):
-        """Fixture to run an algorithm cycle"""
-        return algorithm(population)
+        return algorithms.Standard(**selections, **evolution, **extra)

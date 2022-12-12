@@ -75,6 +75,17 @@ class Crossover(ABC):
         """
         raise NotImplementedError
 
+    @classmethod
+    def __get_validators__(cls):
+        yield cls.class_validator
+
+    @classmethod
+    def class_validator(cls, value):
+        """Validates the value is a correct Mutation type."""
+        if not isinstance(value, cls):
+            raise TypeError("'Mutation' type required")
+        return value
+
 
 class Uniform(Crossover):
     """Executes uniform point crossover on the input phenotypes chromosomes.
