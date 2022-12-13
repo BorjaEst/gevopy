@@ -168,11 +168,11 @@ class Tournaments(Selection):
                 raise ValueError("'tournsize' cannot be lower than 1")
             case builtins.int:
                 self.tournsize = lambda _: tournsize
-            case types.LambdaType if len(inspect.signature(tournsize).parameters) != 1:
-                raise ValueError("Arity for 'tournsize' must be 1")
             case types.LambdaType:
+                if len(inspect.signature(tournsize).parameters) != 1:
+                    raise ValueError("Arity for 'tournsize' must be 1")
                 self.tournsize = tournsize
-            case _wrong_type:
+            case _:
                 raise ValueError("'tournsize' must be 'int' or 'LambdaType'")
 
     def __call__(self, pool, n):

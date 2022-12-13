@@ -2,7 +2,7 @@
 # pylint: disable=redefined-outer-name
 # pylint: disable=unused-argument
 
-from inspect import signature
+import uuid
 
 from pytest import fixture, mark
 
@@ -26,11 +26,18 @@ def max_score(request):
 
 
 @fixture(scope="class")
+def experiment_name():
+    """Fixture to generate an experiment name for testing"""
+    return f"Experiment_{uuid.uuid4()}"
+
+
+@fixture(scope="class")
 def session(experiment, population):
     """Fixture to open and return an experiment session for evolution"""
     with experiment.session() as session:
         session.add_phenotypes(population)
         yield session
+        session.del_experiment()
 
 
 @fixture(scope="class")

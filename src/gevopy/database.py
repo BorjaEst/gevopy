@@ -75,6 +75,16 @@ class Interface(abc.ABC):
         """
         raise NotImplementedError
 
+    @classmethod
+    @abc.abstractmethod
+    def del_phenotypes(cls, container, ids):
+        """Deletes from database and returns the matching id phenotypes.
+        :param container: Session container for database session
+        :param ids: Ids from the phenotypes to collect
+        :return: Deleted phenotypes matching the input ids
+        """
+        raise NotImplementedError
+
 
 class Neo4jInterface(Interface):
     """Neo4j database interface as evolution graph. It replacess all neo4j
@@ -144,6 +154,26 @@ class Neo4jInterface(Interface):
         cls.logger.debug('Getting phenotypes %s', ids)
         return container.session.execute_read(get_phenotypes, ids)
 
+    @classmethod
+    def del_phenotypes(cls, container, ids):
+        """Deletes from database and returns the matching id phenotypes.
+        :param container: Session container for database session
+        :param ids: Ids from the phenotypes to delete
+        :return: Deleted phenotypes matching the input ids
+        """
+        ids = list(str(id) for id in ids)
+        cls.logger.debug('Deleting phenotypes %s', ids)
+        return container.session.execute_write(del_phenotypes, ids)
+
+    @classmethod
+    def del_experiment(cls, container, name):
+        """Transaction to delete experiment and related data.
+        :param container: Session container for database session
+        :param name: Id of the experiment to delete
+        """
+        cls.logger.debug('Deleting experiment %s', name)
+        return container.session.execute_write(del_experiment, name)
+
 
 class EmptyInterface(Interface):
     """Neo4j database interface as evolution graph. It replacess all neo4j
@@ -175,7 +205,7 @@ class EmptyInterface(Interface):
     @contextlib.contextmanager
     def session(self, *args, **kwds):
         """Function to generate a context session to interface the experiment.
-        :param args: Ignored 
+        :param args: Ignored
         :param kwds: Ignored
         :return: Database session container with interface methods
         """
@@ -207,6 +237,25 @@ class EmptyInterface(Interface):
         ids = list(str(id) for id in ids)
         cls.logger.debug('Getting phenotypes %s', ids)
         return []
+
+    @classmethod
+    def del_phenotypes(cls, _container, ids):
+        """Deletes from database and returns the matching id phenotypes.
+        :param container: Session container (Not used)
+        :param ids: Ids from the phenotypes to delete
+        :return: Deleted phenotypes matching the input ids
+        """
+        ids = list(str(id) for id in ids)
+        cls.logger.debug('Deleting phenotypes %s', ids)
+        return []
+
+    @classmethod
+    def del_experiment(cls, _container, name):
+        """Transaction to delete experiment and related data.
+        :param container: Session container (Not used)
+        :param name: Id of the experiment to delete
+        """
+        cls.logger.debug('Deleting experiment %s', name)
 
 
 # Session Containers ------------------------------------------------
@@ -256,6 +305,21 @@ class AbstractSession(abc.ABC):
         """
         raise NotImplementedError
 
+    @abc.abstractmethod
+    def del_phenotypes(self, ids):
+        """Deletes from database and returns the matching id phenotypes.
+        :param ids: Ids from the phenotypes to delete
+        :return: Deleted phenotypes matching the input ids
+        """
+        raise NotImplementedError
+
+    @abc.abstractmethod
+    def del_experiment(self, name):
+        """Transaction to delete experiment and related data.
+        :param name: Id of the experiment to delete
+        """
+        raise NotImplementedError
+
 
 class SessionContainer(AbstractSession):
     """Generic Database Session Container for Database Interface"""
@@ -282,6 +346,21 @@ class SessionContainer(AbstractSession):
         :return: Serialized phenotypes matching the input ids
         """
         return self.interface.get_phenotypes(self, ids)
+
+    @AbstractSession.require_session
+    def del_phenotypes(self, ids):
+        """Deletes from database and returns the matching id phenotypes.
+        :param ids: Ids from the phenotypes to delete
+        :return: Deleted phenotypes matching the input ids
+        """
+        return self.interface.del_phenotypes(self, ids)
+
+    @AbstractSession.require_session
+    def del_experiment(self, name):
+        """Transaction to delete experiment and related data.
+        :param name: Id of the experiment to delete
+        """
+        return self.interface.del_experiment(self, name)
 
 
 # NEO4J Transactions ------------------------------------------------
@@ -312,7 +391,7 @@ def add_phenotypes(tx, phenotypes):
         "  MERGE (x)-[:IN_EXPERIMENT]->(e) "
         "} "
     )
-    _result = tx.run(query, phenotypes=phenotypes)
+    tx.run(query, phenotypes=phenotypes)
     return [p['id'] for p in phenotypes]
 
 
@@ -332,3 +411,34 @@ def get_phenotypes(tx, ids):
     )
     result = tx.run(query, phenotypes_ids=ids)
     return [dict(record["x"]) for record in result]
+
+
+@neo4j.unit_of_work(timeout=config['timeout'])
+def del_phenotypes(tx, ids):
+    """Transaction to delete the matching id phenotypes.
+    :param tx: Neo4j transaction object
+    :param ids: Ids from the phenotypes to collect
+    :return: Ids of the matched and deleted phenotypes
+    """
+    query = (
+        "MATCH (x:Phenotype) WHERE x.id IN $phenotypes_ids "
+        "WITH x as phenotype, x.id AS id "
+        "DETACH DELETE phenotype "
+        "RETURN id "
+    )
+    result = tx.run(query, phenotypes_ids=ids)
+    return [record["id"] for record in result]
+
+
+@neo4j.unit_of_work(timeout=config['timeout'])
+def del_experiment(tx, name):
+    """Transaction to delete experiment and related data.
+    :param tx: Neo4j transaction object
+    :param name: Id of the experiment to delete
+    """
+    query = (
+        "MATCH (e:Experiment { name: $experiment_name }) "
+        "OPTIONAL MATCH (x)-[:IN_EXPERIMENT]->(e) "
+        "DETACH DELETE e, x "
+    )
+    tx.run(query, experiment_name=name)

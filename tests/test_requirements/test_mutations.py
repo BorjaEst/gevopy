@@ -47,7 +47,7 @@ class ExecutionRequirements:
 
     def test_mutated_diff(self,  original, phenotype):
         """Test mutation returns different object than phenotype"""
-        assert not original is phenotype
+        assert original is not phenotype
 
     def test_all_ids_keep(self,  original, phenotype):
         """Test mutation does not alter phenotype id"""
