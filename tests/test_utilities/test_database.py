@@ -4,11 +4,12 @@
 from pytest import fixture
 
 
-@fixture(scope="module", autouse=True)
-def session(db_interface):
+@fixture(scope="class", autouse=True)
+def session(db_interface, experiment_name):
     """Fixture to start a graph database session for testing"""
     with db_interface.session() as session:
         yield session
+        session.del_experiment(experiment_name)
 
 
 @fixture(scope="class", autouse=True)
