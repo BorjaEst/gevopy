@@ -133,6 +133,12 @@ class Session(BaseModel):
         """
         return self._population
 
+    def del_experiment(self):
+        """Deletes the experiment phenotypes and data. Also in database.
+        """
+        self.database.del_experiment(name=self.experiment.name)
+        self._population = []
+
     def eval_phenotypes(self, fitness, save=True):
         """Executes the fitness evaluation on the session population.
         :param algorithm: Algorithm to run each execution generation cycle
