@@ -34,7 +34,7 @@ def db_interface(request, driver_kwds):
     match request.param:
         case "Neo4jInterface":
             interface = Neo4jInterface(**driver_kwds)
-        case _default:
+        case _:
             interface = EmptyInterface()
     yield interface
     interface.close()

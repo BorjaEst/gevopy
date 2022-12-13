@@ -2,8 +2,6 @@
 # pylint: disable=redefined-outer-name
 # pylint: disable=unused-argument
 
-from inspect import signature
-
 from pytest import fixture, mark
 
 import gevopy as ea
