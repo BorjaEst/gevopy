@@ -165,6 +165,15 @@ class Neo4jInterface(Interface):
         cls.logger.debug('Deleting phenotypes %s', ids)
         return container.session.execute_write(del_phenotypes, ids)
 
+    @classmethod
+    def del_experiment(cls, container, name):
+        """Transaction to delete experiment and related data.
+        :param container: Session container for database session
+        :param name: Id of the experiment to delete
+        """
+        cls.logger.debug('Deleting experiment %s', name)
+        return container.session.execute_write(del_experiment, name)
+
 
 class EmptyInterface(Interface):
     """Neo4j database interface as evolution graph. It replacess all neo4j
@@ -240,6 +249,14 @@ class EmptyInterface(Interface):
         cls.logger.debug('Deleting phenotypes %s', ids)
         return []
 
+    @classmethod
+    def del_experiment(cls, _container, name):
+        """Transaction to delete experiment and related data.
+        :param container: Session container (Not used)
+        :param name: Id of the experiment to delete
+        """
+        cls.logger.debug('Deleting experiment %s', name)
+
 
 # Session Containers ------------------------------------------------
 
@@ -296,6 +313,13 @@ class AbstractSession(abc.ABC):
         """
         raise NotImplementedError
 
+    @abc.abstractmethod
+    def del_experiment(self, name):
+        """Transaction to delete experiment and related data.
+        :param name: Id of the experiment to delete
+        """
+        raise NotImplementedError
+
 
 class SessionContainer(AbstractSession):
     """Generic Database Session Container for Database Interface"""
@@ -330,6 +354,13 @@ class SessionContainer(AbstractSession):
         :return: Deleted phenotypes matching the input ids
         """
         return self.interface.del_phenotypes(self, ids)
+
+    @AbstractSession.require_session
+    def del_experiment(self, name):
+        """Transaction to delete experiment and related data.
+        :param name: Id of the experiment to delete
+        """
+        return self.interface.del_experiment(self, name)
 
 
 # NEO4J Transactions ------------------------------------------------
@@ -397,3 +428,17 @@ def del_phenotypes(tx, ids):
     )
     result = tx.run(query, phenotypes_ids=ids)
     return [record["id"] for record in result]
+
+
+@neo4j.unit_of_work(timeout=config['timeout'])
+def del_experiment(tx, name):
+    """Transaction to delete experiment and related data.
+    :param tx: Neo4j transaction object
+    :param name: Id of the experiment to delete
+    """
+    query = (
+        "MATCH (e:Experiment { name: $experiment_name }) "
+        "OPTIONAL MATCH (x)-[:IN_EXPERIMENT]->(e) "
+        "DETACH DELETE e, x "
+    )
+    tx.run(query, experiment_name=name)
