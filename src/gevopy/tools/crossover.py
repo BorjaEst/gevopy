@@ -70,8 +70,8 @@ class Crossover(ABC):
     def cross_chromosomes(self, chromosome_1, chromosome_2):
         """Executes the crossover between chromosome. The two chromosomes
         are modified in place and both keep their original length.
-        :param chromosome_1: The first chromosome participating in the crossover
-        :param chromosome_2: The second chromosome participating in the crossover
+        :param chromosome_1: First chromosome participating in the crossover
+        :param chromosome_2: Second chromosome participating in the crossover
         """
         raise NotImplementedError
 
@@ -102,14 +102,14 @@ class Uniform(Crossover):
                 raise ValueError("Value for 'indpb' must be beween 0 and 1")
             case builtins.float:
                 self.index_probability = indpb
-            case _wrong_type:
+            case _:
                 raise ValueError("Type for 'indpb' must be 'float'")
 
     def cross_chromosomes(self, chromosome_1, chromosome_2):
         """Executes the crossover between chromosomes. The two chromosomes
         are modified in place and both keep their original length.
-        :param chromosome_1: The first chromosome participating in the crossover
-        :param chromosome_2: The second chromosome participating in the crossover
+        :param chromosome_1: First chromosome participating in the crossover
+        :param chromosome_2: Second chromosome participating in the crossover
         """
         mask = np.random.random(len(chromosome_1)) <= self.index_probability
         ch1, ch2 = chromosome_1, chromosome_2  # Code len reduction
@@ -131,14 +131,14 @@ class MultiPoint(Crossover):
                 raise ValueError("Value for 'n' cannot be lower than 1")
             case builtins.int:
                 self.number_points = n
-            case _wrong_type:
+            case _:
                 raise ValueError("Type for 'n' must be a positive 'int'")
 
     def cross_chromosomes(self, chromosome_1, chromosome_2):
         """Executes the crossover between chromosomes. The two chromosomes
         are modified in place and both keep their original length.
-        :param chromosome_1: The first chromosome participating in the crossover
-        :param chromosome_2: The second chromosome participating in the crossover
+        :param chromosome_1: First chromosome participating in the crossover
+        :param chromosome_2: Second chromosome participating in the crossover
         """
         lengths = len(chromosome_1), len(chromosome_2)
         points = np.random.randint(min(*lengths), size=self.number_points)

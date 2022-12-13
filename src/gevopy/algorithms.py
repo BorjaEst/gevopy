@@ -43,7 +43,7 @@ class Algorithm(BaseModel, ABC):
         mutation operations.
 
     When an algoritm has the property crossover, you can usually configure
-    a second `selection` argument `selection2` to control how the algorithm 
+    a second `selection` argument `selection2` to control how the algorithm
     selects the secondary phenotype.
     """
 
@@ -102,7 +102,7 @@ class HasSelection2(HasSelection1, Algorithm):
     def select(self, phenotypes, n):
         """Extends algorithm call method with phenotypes selection operation.
         :param phenotypes: Pool of evaluated phenotypes
-        :param n: Number of phenotype to select from pool 
+        :param n: Number of phenotype to select from pool
         :returns: A list of varied phenotypes
         """
         selected1 = super().select(phenotypes, n)

@@ -158,7 +158,7 @@ class Neo4jInterface(Interface):
     def del_phenotypes(cls, container, ids):
         """Deletes from database and returns the matching id phenotypes.
         :param container: Session container for database session
-        :param ids: Ids from the phenotypes to delete 
+        :param ids: Ids from the phenotypes to delete
         :return: Deleted phenotypes matching the input ids
         """
         ids = list(str(id) for id in ids)
@@ -205,7 +205,7 @@ class EmptyInterface(Interface):
     @contextlib.contextmanager
     def session(self, *args, **kwds):
         """Function to generate a context session to interface the experiment.
-        :param args: Ignored 
+        :param args: Ignored
         :param kwds: Ignored
         :return: Database session container with interface methods
         """
@@ -242,7 +242,7 @@ class EmptyInterface(Interface):
     def del_phenotypes(cls, _container, ids):
         """Deletes from database and returns the matching id phenotypes.
         :param container: Session container (Not used)
-        :param ids: Ids from the phenotypes to delete 
+        :param ids: Ids from the phenotypes to delete
         :return: Deleted phenotypes matching the input ids
         """
         ids = list(str(id) for id in ids)
@@ -391,7 +391,7 @@ def add_phenotypes(tx, phenotypes):
         "  MERGE (x)-[:IN_EXPERIMENT]->(e) "
         "} "
     )
-    _result = tx.run(query, phenotypes=phenotypes)
+    tx.run(query, phenotypes=phenotypes)
     return [p['id'] for p in phenotypes]
 
 

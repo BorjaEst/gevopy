@@ -13,7 +13,7 @@ class Pool(SortedKeyList):
 
     def __init__(self, iterable=None):
         """Constructor for a pool as sorted mutable sequence.
-        :param iterable: Initial iterable of values to initialize the sorted-key list
+        :param iterable: Iterable of values to initialize the sorted-key list
         """
         super().__init__(iterable, key=lambda item: -item.score)
 
