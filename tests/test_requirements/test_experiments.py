@@ -31,6 +31,7 @@ def session(experiment, population):
     with experiment.session() as session:
         session.add_phenotypes(population)
         yield session
+        session.del_experiment()
 
 
 @fixture(scope="class")
