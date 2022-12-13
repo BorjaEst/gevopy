@@ -2,6 +2,8 @@
 # pylint: disable=redefined-outer-name
 # pylint: disable=unused-argument
 
+import uuid
+
 from pytest import fixture, mark
 
 import gevopy as ea
@@ -21,6 +23,12 @@ def max_generation(request):
 def max_score(request):
     """Parametrization for the maximum score to achieve on experiment"""
     return request.param
+
+
+@fixture(scope="class")
+def experiment_name():
+    """Fixture to generate an experiment name for testing"""
+    return f"Experiment_{uuid.uuid4()}"
 
 
 @fixture(scope="class")
