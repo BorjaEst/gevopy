@@ -1,4 +1,4 @@
-"""Module to test selection operations for evolution algorithms."""
+"""Module to test crossover utilities for evolution algorithms."""
 # pylint: disable=redefined-outer-name
 
 import numpy as np

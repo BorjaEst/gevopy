@@ -25,19 +25,19 @@ class Pool(SortedKeyList):
 
     def append(self, value):
         """Method append is unsupported on chromosome types"""
-        raise AttributeError(f"Unsupported operation by '{self.__class__}'")
+        raise TypeError(f"Unsupported operation by '{self.__class__}'")
 
     def extend(self, values):
         """Method extend is unsupported on chromosome types"""
-        raise AttributeError(f"Unsupported operation by '{self.__class__}'")
+        raise TypeError(f"Unsupported operation by '{self.__class__}'")
 
     def insert(self, index, value):
         """Method insert is unsupported on chromosome types"""
-        raise AttributeError(f"Unsupported operation by '{self.__class__}'")
+        raise TypeError(f"Unsupported operation by '{self.__class__}'")
 
     def reverse(self):
         """Method reverse is unsupported on chromosome types"""
-        raise AttributeError(f"Unsupported operation by '{self.__class__}'")
+        raise TypeError(f"Unsupported operation by '{self.__class__}'")
 
 
 class HallOfFame(Sequence):
@@ -56,49 +56,51 @@ class HallOfFame(Sequence):
         """Hall of fame constructor.
         :param maxsize: Maximum number of phenotypes to keep in the hall
         """
-        match maxsize:
-            case _ if not isinstance(maxsize, int):
-                raise ValueError("Expected type 'int' for maxsize")
-            case _ if not maxsize > 0:
-                raise ValueError("Expected maxsize value higher than 0")
-
-        self.maxsize = maxsize
         self.__items = []
+        self.maxsize = maxsize
 
-    def update(self, phenotypes, generation):
-        """Updates phenotypes to the hall of fame by replacing the worst
-        phenotypes in it by the best phenotypes present in *pool*. Old
-        phenotypes have preference over new phenotypes.
-        :param phenotypes: A list of evaluated phenotypes
-        :param generation: Generation to get priority in case of draw
+    @property
+    def maxsize(self):
+        """Property that defines the maximum ammount of phenotypes in the hall.
+        :return: Maximum allowed number of phenotypes in the hall
         """
-        match (phenotypes, generation):
-            case _ if not isinstance(phenotypes, list):
-                raise ValueError("Expected type 'list' for phenotypes")
-            case _ if not isinstance(generation, int):
-                raise ValueError("Expected type 'int' for generation")
-            case _ if not generation >= 0:
-                raise ValueError("Value for generation cannot be lower than 0")
+        return self.__maxsize
 
-        def sorting(item):
-            return item[0].score, -item[1]
+    @maxsize.setter
+    def maxsize(self, value):
+        match value:
+            case _ if not isinstance(value, int):
+                raise ValueError("Expected type 'int' for maxsize")
+            case _ if not value > 0:
+                raise ValueError("Expected maxsize value higher than 0")
+            case _ if value < len(self):
+                self.__items = self[:value]
+        self.__maxsize = value
 
-        items = self.__items + [(x, generation) for x in phenotypes]
-        self.__items = heapq.nlargest(self.maxsize, items, key=sorting)
+    def update(self, pool):
+        """Updates phenotypes to the hall of fame by replacing the worst
+        phenotypes in the hall by the best phenotypes present in pool. Old
+        phenotypes have preference over new phenotypes.
+        :param pool: A pool of phenotypes
+        """
+        if not isinstance(pool, Pool):
+            raise TypeError("Expected type 'Pool' for phenotypes pool")
+        records = heapq.merge(self, pool, key=lambda x: -x.score)
+        self.__items = [x for _, x in zip(range(self.maxsize), records)]
 
-    def __getitem__(self, key):
-        """Return the phenotype stored in the hall of fame. The hall is
-        sorted from best (first; 0) to worst (last; N).
+    def __getitem__(self, index):
+        """Return the phenotyp/phenotypes stored in the hall of fame. The
+        hall is sorted from best (first; 0) to worst (last; N).
         :param key: Integer for the phenotype to retrieve
         :return: Phenotype at key position
         """
-        return self.__items[key][0]
+        return self.__items.__getitem__(index)
 
     def __len__(self):
         """Number of phenotypes stored at the hall of fame.
         :return: Integer indicating the number of stored phenotypes
         """
-        return len(self.__items)
+        return self.__items.__len__()
 
     @classmethod
     def __get_validators__(cls):
@@ -110,3 +112,9 @@ class HallOfFame(Sequence):
         if not isinstance(value, cls):
             raise TypeError("'HallOfFame' type required")
         return value
+
+    def __repr__(self) -> str:
+        """Representation for HallOfFame.
+        :return: Classificatory representation for members
+        """
+        return self.__items.__repr__()
