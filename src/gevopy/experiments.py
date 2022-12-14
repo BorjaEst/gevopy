@@ -14,10 +14,10 @@ parameters at the end of the evolution process.
 import contextlib
 import logging
 import uuid
-from pprint import pformat
 from typing import List, Optional
 
-from pydantic import BaseModel, Field, PositiveInt, PrivateAttr, root_validator
+from pydantic import (BaseModel, Extra, Field, PositiveInt, PrivateAttr,
+                      root_validator)
 
 import gevopy.algorithms
 import gevopy.database
@@ -175,6 +175,19 @@ class Execution(BaseModel):
     halloffame: gevopy.tools.HallOfFame = gevopy.tools.HallOfFame(3)
     generation: int = 0
 
+    class Config:
+        # pylint: disable=missing-class-docstring
+        # pylint: disable=too-few-public-methods
+        extra = Extra.forbid
+
+    def __repr__(self) -> str:
+        return (
+            "Evolutionary algorithm execution report:\n"
+            f"  Executed generations: {self.generation}\n"
+            f"  Best phenotype: {self.halloffame[0].id}\n"
+            f"  Best score: {self.best_score}\n"
+        )
+
     @root_validator()
     def check_max_gen_or_score(cls, values):
         """Checks for valid end conditions in the Execution"""
@@ -236,14 +249,3 @@ class Execution(BaseModel):
             if self.best_score and self.max_score <= self.best_score:
                 return True
         return False  # If any of the defined
-
-    def __repr__(self) -> str:
-        """Representation for Execution class. Prints execution statistics.
-        :return: Statistical representation for the evolutionary execution
-        """
-        return (
-            "Evolutionary algorithm execution report:\n"
-            f"  Executed generations: {self.generation}\n"
-            f"  Best phenotype: {self.halloffame[0]}\n"
-            f"  Best score: {self.best_score}\n"
-        )

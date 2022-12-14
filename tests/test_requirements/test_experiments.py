@@ -4,7 +4,7 @@
 
 import uuid
 
-from pytest import fixture, mark
+from pytest import fixture, mark, raises
 
 import gevopy as ea
 from gevopy.algorithms import Algorithm
@@ -104,8 +104,17 @@ class ExecRequirements:
         assert isinstance(execution.best_score, (float, int))
 
 
+class ErrRequirements:
+    """Tests group for experiment exceptions requirements"""
+
+    def test_unknown_args(self, session, max_score):
+        """Test score attr returns float/int after first execution"""
+        with raises(ValueError):
+            session.run(unknown_kwarg="something", max_score=max_score)
+
+
 # Parametrization ---------------------------------------------------
-class TestExperiments(AttrRequirements, ExecRequirements):
+class TestExperiments(AttrRequirements, ExecRequirements, ErrRequirements):
     """Parametrization for genetic evolution 'Experiment'"""
 
     @fixture(scope="class")
