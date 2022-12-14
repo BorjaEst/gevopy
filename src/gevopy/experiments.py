@@ -14,6 +14,7 @@ parameters at the end of the evolution process.
 import contextlib
 import logging
 import uuid
+from pprint import pformat
 from typing import List, Optional
 
 from pydantic import BaseModel, Field, PositiveInt, PrivateAttr, root_validator
@@ -128,10 +129,9 @@ class Session(BaseModel):
 
     def get_phenotypes(self):
         """Gets population phenotypes from the experiment session.
-        :param phenotypes: List of phenotypes to add to the experiment
-        :param save: Flag to save new population status in database
+        :return: Pool with experiment session phenotypes
         """
-        return self._population
+        return gevopy.tools.Pool(self._population)
 
     def del_experiment(self):
         """Deletes the experiment phenotypes and data. Also in database.
@@ -216,8 +216,7 @@ class Execution(BaseModel):
                 self.generation += 1  # Increase generation index
                 session.generate_offspring(algorithm, save=False)
                 session.eval_phenotypes(fitness, save=True)
-                population = session.get_phenotypes()
-                self.halloffame.update(population, self.generation)
+                self.halloffame.update(session.get_phenotypes())
         except Exception as err:
             logger.error("Error %s raised during experiment execution", err)
             raise err
@@ -245,6 +244,6 @@ class Execution(BaseModel):
         return (
             "Evolutionary algorithm execution report:\n"
             f"  Executed generations: {self.generation}\n"
-            f"  Best phenotype: {self.halloffame[0].id}\n"
+            f"  Best phenotype: {self.halloffame[0]}\n"
             f"  Best score: {self.best_score}\n"
         )
