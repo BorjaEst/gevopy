@@ -1,12 +1,12 @@
 """Evolution Algorithms, Tools subpackage."""
 
+import collections
 import heapq
-from collections.abc import Sequence
 
-from sortedcontainers import SortedKeyList
+import sortedcontainers
 
 
-class Pool(SortedKeyList):
+class Pool(sortedcontainers.SortedKeyList):
     """Pool is a sorted list of dictionaries where items are composed
     by a *score* and a *phenotype.
     """
@@ -40,7 +40,7 @@ class Pool(SortedKeyList):
         raise TypeError(f"Unsupported operation by '{self.__class__}'")
 
 
-class HallOfFame(Sequence):
+class HallOfFame(collections.abc.Sequence):
     """The hall of fame contains the best individual that ever lived in an
     evolution context (for example an algorithm). It is sorted at all time
     so that the first element of the hall of fame is the item that contains
@@ -77,30 +77,20 @@ class HallOfFame(Sequence):
                 self.__items = self[:value]
         self.__maxsize = value
 
-    def update(self, pool):
-        """Updates phenotypes to the hall of fame by replacing the worst
-        phenotypes in the hall by the best phenotypes present in pool. Old
-        phenotypes have preference over new phenotypes.
-        :param pool: A pool of phenotypes
-        """
-        if not isinstance(pool, Pool):
-            raise TypeError("Expected type 'Pool' for phenotypes pool")
-        records = heapq.merge(self, pool, key=lambda x: -x.score)
-        self.__items = [x for _, x in zip(range(self.maxsize), records)]
+    def __iter__(self):
+        return iter(self.__items)
+
+    def __contains__(self, value):
+        return value in self.__items
 
     def __getitem__(self, index):
-        """Return the phenotyp/phenotypes stored in the hall of fame. The
-        hall is sorted from best (first; 0) to worst (last; N).
-        :param key: Integer for the phenotype to retrieve
-        :return: Phenotype at key position
-        """
         return self.__items.__getitem__(index)
 
     def __len__(self):
-        """Number of phenotypes stored at the hall of fame.
-        :return: Integer indicating the number of stored phenotypes
-        """
         return self.__items.__len__()
+
+    def __repr__(self) -> str:
+        return self.__items.__repr__()
 
     @classmethod
     def __get_validators__(cls):
@@ -113,8 +103,13 @@ class HallOfFame(Sequence):
             raise TypeError("'HallOfFame' type required")
         return value
 
-    def __repr__(self) -> str:
-        """Representation for HallOfFame.
-        :return: Classificatory representation for members
+    def update(self, pool):
+        """Updates phenotypes to the hall of fame by replacing the worst
+        phenotypes in the hall by the best phenotypes present in pool. Old
+        phenotypes have preference over new phenotypes.
+        :param pool: A pool of phenotypes
         """
-        return self.__items.__repr__()
+        if not isinstance(pool, Pool):
+            raise TypeError("Expected type 'Pool' for phenotypes pool")
+        records = heapq.merge(self, pool, key=lambda x: -x.score)
+        self.__items = [x for _, x in zip(range(self.maxsize), records)]
