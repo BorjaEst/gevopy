@@ -102,7 +102,7 @@ instantiating the experiment to store all phenotypes during the execution.
 import gevopy as ea
 
 experiment = ea.Experiment(
-    fitness=MyFitness(cached=True, schedule="synchronous"),
+    fitness=MyFitness(cache=True, schedule="synchronous"),
     algorithm=MyAlgorithm(survival_rate=0.2),
 )
 
