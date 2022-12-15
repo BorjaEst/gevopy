@@ -57,7 +57,7 @@ class Experiment(BaseModel):
 
     def __init__(self, **data):
         super().__init__(**data)
-        self._logger = logging.getLogger(f"{__name__}.Experiment")
+        self._logger = logging.getLogger(f"{__package__}.Experiment")
         self._logger = self.Logger(self.logger, {"exp": self})
 
     class Logger(logging.LoggerAdapter):
@@ -82,6 +82,13 @@ class Experiment(BaseModel):
             self.logger.debug("Enter session with: %s %s", args, kwds)
             yield Session(experiment=self, database=db_session)
             self.logger.debug("Exit session with: %s %s", args, kwds)
+
+    def close(self,  *args, **kwds):
+        """Function to close the database interface driver.
+        :param args: Same as database Driver close possitional arguments
+        :param kwds: Same as database Driver close key arguments
+        """
+        self.database.close(*args, **kwds)
 
 
 class Session(BaseModel):
@@ -225,11 +232,11 @@ class Execution(BaseModel):
             logger.info("Start of evolutionary experiment execution")
             session.eval_phenotypes(fitness, save=True)  # Evaluate first pop
             while not self.completed:
-                logger.info("New execution cycle; %s", self.best_score)
                 self.generation += 1  # Increase generation index
                 session.generate_offspring(algorithm, save=False)
                 session.eval_phenotypes(fitness, save=True)
                 self.halloffame.update(session.get_phenotypes())
+                logger.info("Completed cycle; %s", self.best_score)
         except Exception as err:
             logger.error("Error %s raised during experiment execution", err)
             raise err
