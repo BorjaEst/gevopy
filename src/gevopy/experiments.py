@@ -16,7 +16,8 @@ import logging
 import uuid
 from typing import List, Optional
 
-from pydantic import BaseModel, Field, PositiveInt, PrivateAttr, root_validator
+from pydantic import (BaseModel, Extra, Field, PositiveInt, PrivateAttr,
+                      root_validator)
 
 import gevopy.algorithms
 import gevopy.database
@@ -56,7 +57,7 @@ class Experiment(BaseModel):
 
     def __init__(self, **data):
         super().__init__(**data)
-        self._logger = logging.getLogger(f"{__name__}.Experiment")
+        self._logger = logging.getLogger(f"{__package__}.Experiment")
         self._logger = self.Logger(self.logger, {"exp": self})
 
     class Logger(logging.LoggerAdapter):
@@ -81,6 +82,13 @@ class Experiment(BaseModel):
             self.logger.debug("Enter session with: %s %s", args, kwds)
             yield Session(experiment=self, database=db_session)
             self.logger.debug("Exit session with: %s %s", args, kwds)
+
+    def close(self,  *args, **kwds):
+        """Function to close the database interface driver.
+        :param args: Same as database Driver close possitional arguments
+        :param kwds: Same as database Driver close key arguments
+        """
+        self.database.close(*args, **kwds)
 
 
 class Session(BaseModel):
@@ -128,10 +136,9 @@ class Session(BaseModel):
 
     def get_phenotypes(self):
         """Gets population phenotypes from the experiment session.
-        :param phenotypes: List of phenotypes to add to the experiment
-        :param save: Flag to save new population status in database
+        :return: Pool with experiment session phenotypes
         """
-        return self._population
+        return gevopy.tools.Pool(self._population)
 
     def del_experiment(self):
         """Deletes the experiment phenotypes and data. Also in database.
@@ -175,6 +182,19 @@ class Execution(BaseModel):
     halloffame: gevopy.tools.HallOfFame = gevopy.tools.HallOfFame(3)
     generation: int = 0
 
+    class Config:
+        # pylint: disable=missing-class-docstring
+        # pylint: disable=too-few-public-methods
+        extra = Extra.forbid
+
+    def __repr__(self) -> str:
+        return (
+            "Evolutionary algorithm execution report:\n"
+            f"  Executed generations: {self.generation}\n"
+            f"  Best phenotype: {self.halloffame[0].id}\n"
+            f"  Best score: {self.best_score}\n"
+        )
+
     @root_validator()
     def check_max_gen_or_score(cls, values):
         """Checks for valid end conditions in the Execution"""
@@ -212,12 +232,11 @@ class Execution(BaseModel):
             logger.info("Start of evolutionary experiment execution")
             session.eval_phenotypes(fitness, save=True)  # Evaluate first pop
             while not self.completed:
-                logger.info("New execution cycle; %s", self.best_score)
                 self.generation += 1  # Increase generation index
                 session.generate_offspring(algorithm, save=False)
                 session.eval_phenotypes(fitness, save=True)
-                population = session.get_phenotypes()
-                self.halloffame.update(population, self.generation)
+                self.halloffame.update(session.get_phenotypes())
+                logger.info("Completed cycle; %s", self.best_score)
         except Exception as err:
             logger.error("Error %s raised during experiment execution", err)
             raise err
@@ -237,14 +256,3 @@ class Execution(BaseModel):
             if self.best_score and self.max_score <= self.best_score:
                 return True
         return False  # If any of the defined
-
-    def __repr__(self) -> str:
-        """Representation for Execution class. Prints execution statistics.
-        :return: Statistical representation for the evolutionary execution
-        """
-        return (
-            "Evolutionary algorithm execution report:\n"
-            f"  Executed generations: {self.generation}\n"
-            f"  Best phenotype: {self.halloffame[0].id}\n"
-            f"  Best score: {self.best_score}\n"
-        )

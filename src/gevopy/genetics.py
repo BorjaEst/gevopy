@@ -12,6 +12,7 @@ import copy
 import json
 import uuid
 from datetime import datetime
+from pprint import pformat
 from typing import List, MutableSequence
 
 import numpy as np
@@ -221,6 +222,9 @@ class GenotypeModel(BaseModel):
         # pylint: disable=too-few-public-methods
         json_encoders = {Chromosome: lambda x: x.astype("uint8").tolist()}
 
+    def __repr__(self):
+        return pformat(self.__dict__, sort_dicts=False)
+
     def dict(self, *args, serialize=False, **kwargs):
         """Returns the phenotype serialized and in dict form,
         :return: Serialized dictionary
@@ -239,10 +243,3 @@ class GenotypeModel(BaseModel):
         clone.id = uuid.uuid4()  # Generate new id
         clone.score = None  # Reset the clone score
         return clone
-
-    def __repr__(self):
-        """Representation method for phenotype. It displays the class name
-        together with the phenotype id.
-        :return: String representing the genotype instance (phenotype)
-        """
-        return f"{self.__class__.__name__} {self.id}"
