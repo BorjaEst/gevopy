@@ -24,7 +24,7 @@ Do not hesitate to extend your knowledge by using all the additional provided
 examples at the folder [examples](./examples).
 
 ### Genotypes
-Define your Genotypes following the `dataclass` principles from `pydantic` by
+Define your Genotypes following the `dataclass` principles from python by
 using the base model `GenotypeModel`. All dataclass attributes are accepted in 
 addition to an special type `Chromosome` provided in the module `genetics`.
 To start use the already defined chromosome subclasses such `Haploid` and

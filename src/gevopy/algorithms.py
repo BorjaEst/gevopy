@@ -14,19 +14,18 @@ import functools
 import logging
 import math
 from abc import ABC, abstractmethod
-
-from pydantic import BaseModel
+from dataclasses import dataclass
 
 from gevopy import tools
-from gevopy.tools.crossover import Crossover
-from gevopy.tools.mutation import Mutation
-from gevopy.tools.selection import Selection
+import gevopy.tools.crossover as crossover_tools
+import gevopy.tools.mutation as mutation_tools
+import gevopy.tools.selection as selection_tools
 
 # https://docs.python.org/3/howto/logging-cookbook.html
 module_logger = logging.getLogger(__name__)
 
 
-class Algorithm(BaseModel, ABC):
+class Algorithm(ABC):
     """Base abstract class for algorithms generation and identification.
     An algorithm is composed generally by at least 3 components:
      - Selection: Tool to select phenotypes
@@ -46,11 +45,6 @@ class Algorithm(BaseModel, ABC):
     a second `selection` argument `selection2` to control how the algorithm
     selects the secondary phenotype.
     """
-
-    class Config:
-        # pylint: disable=missing-class-docstring
-        # pylint: disable=too-few-public-methods
-        keep_untouched = (functools.cached_property,)
 
     @functools.cached_property
     def logger(self):
@@ -75,13 +69,10 @@ class Algorithm(BaseModel, ABC):
         raise NotImplementedError
 
 
+@dataclass
 class HasSelection1(Algorithm):
     """Extend class Algorithm with a second selection round of phenotypes."""
-    selection1: Selection
-
-    def __init__(self, **data) -> None:
-        """Generic constructor for genetic algorithms."""
-        super().__init__(**data)
+    selection1: selection_tools.Selection = selection_tools.Ponderated()
 
     def select(self, phenotypes, n):
         """Extends algorithm call method with phenotypes selection operation.
@@ -95,9 +86,10 @@ class HasSelection1(Algorithm):
         return selected1
 
 
+@dataclass
 class HasSelection2(HasSelection1, Algorithm):
     """Extend class Algorithm with a second selection round of phenotypes."""
-    selection2: Selection
+    selection2: selection_tools.Selection = selection_tools.Uniform()
 
     def select(self, phenotypes, n):
         """Extends algorithm call method with phenotypes selection operation.
@@ -112,9 +104,10 @@ class HasSelection2(HasSelection1, Algorithm):
         return selected1, selected2
 
 
+@dataclass
 class HasCrossover(HasSelection2, Algorithm):
     """Extend class Algorithm with crossover properties and methods."""
-    crossover: Crossover
+    crossover: crossover_tools.Crossover = crossover_tools.OnePoint()
 
     def cross(self, selected1, selected2):
         """Extends algorithm call method with phenotypes crossover operation.
@@ -129,9 +122,10 @@ class HasCrossover(HasSelection2, Algorithm):
         return offspring
 
 
+@dataclass
 class HasMutation(HasSelection1, Algorithm):
     """Extend class Algorithm with mutation properties and methods."""
-    mutation: Mutation
+    mutation: mutation_tools.Mutation = mutation_tools.SinglePoint()
 
     def mutate(self, phenotypes):
         """Extends algorithm call method with phenotypes mutation operation.
@@ -144,6 +138,7 @@ class HasMutation(HasSelection1, Algorithm):
         return offspring
 
 
+@dataclass
 class HasSurvivalRate(HasSelection1, Algorithm):
     """Extend class Algorithm with survival properties and methods. When
     subclassing this methods, the algorithm protects the most performant
@@ -163,6 +158,7 @@ class HasSurvivalRate(HasSelection1, Algorithm):
         return survivors, phenotypes[n_survivors:]
 
 
+@dataclass
 class Standard(HasSurvivalRate, HasCrossover, HasMutation, Algorithm):
     """This algorithm reproduce the standard evolutionary algorithm.
 

@@ -43,7 +43,7 @@ def add_parents(population):
 @fixture(scope="function")
 def phenotypes(population):
     """Fixture to return phenotypes ids from population"""
-    return [p.dict(serialize=True) for p in population]
+    return [p.serialize for p in population]
 
 
 @fixture(scope="function")

@@ -14,10 +14,8 @@ parameters at the end of the evolution process.
 import contextlib
 import logging
 import uuid
-from typing import List, Optional
-
-from pydantic import (BaseModel, Extra, Field, PositiveInt, PrivateAttr,
-                      root_validator)
+from dataclasses import dataclass, field
+from typing import List, Optional, Union
 
 import gevopy.algorithms
 import gevopy.database
@@ -27,6 +25,7 @@ from gevopy.database import EmptyInterface
 from gevopy.fitness import FitnessModel
 from gevopy.genetics import GenotypeModel
 from gevopy.tools import crossover, mutation, selection
+
 
 # https://docs.python.org/3/howto/logging-cookbook.html
 module_logger = logging.getLogger(__name__)
@@ -41,7 +40,8 @@ DEFAULT_ALGORITHM = gevopy.algorithms.Standard(
 )
 
 
-class Experiment(BaseModel):
+@dataclass
+class Experiment():
     """Base class for evolution experiments.
     Provides the essential attributes to create and run an experiment.
     :param fitness: Fitness instance to evaluate phenotypes
@@ -49,13 +49,13 @@ class Experiment(BaseModel):
     :param name: Experiment name, if none, generates an uuid4 string
     :param database: Database interface object, defaults to EmptyInterface
     """
-    fitness: gevopy.fitness.FitnessModel
+    _logger: logging.Logger = None
+    fitness: gevopy.fitness.FitnessModel = None
     algorithm: gevopy.algorithms.Algorithm = DEFAULT_ALGORITHM
     database: gevopy.database.Interface = EmptyInterface()
-    name: str = Field(default_factory=lambda: str(uuid.uuid4()))
-    _logger: logging.Logger = PrivateAttr()
+    name: str = field(default_factory=lambda: str(uuid.uuid4()))
 
-    def __init__(self, **data):
+    def __post_init__(self, **data):
         super().__init__(**data)
         self._logger = logging.getLogger(f"{__package__}.Experiment")
         self._logger = self.Logger(self.logger, {"exp": self})
@@ -91,7 +91,8 @@ class Experiment(BaseModel):
         self.database.close(*args, **kwds)
 
 
-class Session(BaseModel):
+@dataclass
+class Session():
     """Base class for evolution experiment sessions.
     Provides the essential attributes to prepare the execution conditions.
     :param experiment: Experiment name the session is linked with
@@ -100,7 +101,7 @@ class Session(BaseModel):
 
     experiment: Experiment
     database: gevopy.database.SessionContainer
-    _population: List[GenotypeModel] = PrivateAttr(default=[])
+    _population: List[GenotypeModel] = field(default_factory=lambda: [])
 
     class Config:
         # pylint: disable=missing-class-docstring
@@ -112,7 +113,7 @@ class Session(BaseModel):
         """
         if any(not isinstance(x, GenotypeModel) for x in phenotypes):
             raise ValueError("Phenotypes must inherit from GenotypeModel")
-        iserial_phenotypes = (p.dict(serialize=True) for p in phenotypes)
+        iserial_phenotypes = (p.serialize for p in phenotypes)
         self.database.add_phenotypes(iserial_phenotypes)  # Iter to speed up
 
     def run(self, **execution_kwds):
@@ -169,7 +170,8 @@ class Session(BaseModel):
             self.save_phenotypes(self._population)
 
 
-class Execution(BaseModel):
+@dataclass
+class Execution():
     """Base class for evolution algorithm execution. This class uses an
     experiment session to run evolution cycles and generations on a population
     of phenotypes. It also includes statistics about the execution process.
@@ -177,15 +179,14 @@ class Execution(BaseModel):
     Note that if neither max_generation or max_score are defined, the
     constructor raises ValueError for required valid end conditions.
     """
-    max_generation: Optional[PositiveInt] = None
-    max_score: Optional[float]
+    max_generation: Optional[int] = None  # PositiveInt
+    max_score: Optional[Union[float, int]] = None
     halloffame: gevopy.tools.HallOfFame = gevopy.tools.HallOfFame(3)
     generation: int = 0
 
-    class Config:
-        # pylint: disable=missing-class-docstring
-        # pylint: disable=too-few-public-methods
-        extra = Extra.forbid
+    def __post_init__(self):
+        if (self.max_generation is None) and (self.max_score is None):
+            raise ValueError('Either max_generation or max_score is required')
 
     def __repr__(self) -> str:
         return (
@@ -195,15 +196,25 @@ class Execution(BaseModel):
             f"  Best score: {self.best_score}\n"
         )
 
-    @root_validator()
-    def check_max_gen_or_score(cls, values):
-        """Checks for valid end conditions in the Execution"""
-        # pylint: disable=no-self-argument
-        max_generation = values.get('max_generation')
-        max_score = values.get("max_score")
-        if (max_generation is None) and (max_score is None):
-            raise ValueError('Either max_generation or max_score is required')
-        return values
+    @property
+    def max_generation(self):
+        """Maximum generation before ending the evolution algorithm."""
+        return self.__max_generation
+
+    @max_generation.setter
+    def max_generation(self, value: int):
+        if value and value <= 0:
+            raise ValueError("Expected max_generation bigger than 0")
+        self.__max_generation = value
+
+    @property
+    def max_score(self):
+        """Maximum score before ending the evolution algorithm."""
+        return self.__max_score
+
+    @max_score.setter
+    def max_score(self, value: Union[float, int]):
+        self.__max_score = value
 
     @property
     def best_score(self):

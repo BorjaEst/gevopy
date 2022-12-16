@@ -9,14 +9,14 @@ depending on the complexity of your genetic model.
 """
 
 import copy
-import json
+import dataclasses
 import uuid
+from dataclasses import dataclass, field
 from datetime import datetime
 from pprint import pformat
 from typing import List, MutableSequence
 
 import numpy as np
-from pydantic import BaseModel, Field, PositiveInt
 
 from gevopy import random as ea_random
 
@@ -195,7 +195,8 @@ class Triploid(Chromosome):
         return ea_random.triploid(self.size)
 
 
-class GenotypeModel(BaseModel):
+@dataclass
+class GenotypeModel():
     """Evolution Genotype is the most basic but flexible form of genetics.
     It is a chromosomes container with an unique identifier. Different
     organisms might have different numbers of chromosomes.
@@ -210,30 +211,21 @@ class GenotypeModel(BaseModel):
      - clone: Method to produce a genotype deep copy with different id
     """
 
-    id: uuid.UUID = Field(default_factory=uuid.uuid4)
+    id: uuid.UUID = field(default_factory=uuid.uuid4)
     experiment: str = None
-    created: datetime = Field(default_factory=datetime.utcnow)
-    parents: List[uuid.UUID] = []
-    generation: PositiveInt = Field(default=1)
+    created: datetime = field(default_factory=datetime.utcnow)
+    parents: List[uuid.UUID] = field(default_factory=lambda: [])
+    generation: int = field(default=1)
     score: float = None
-
-    class Config:
-        # pylint: disable=missing-class-docstring
-        # pylint: disable=too-few-public-methods
-        json_encoders = {Chromosome: lambda x: x.astype("uint8").tolist()}
 
     def __repr__(self):
         return pformat(self.__dict__, sort_dicts=False)
 
-    def dict(self, *args, serialize=False, **kwargs):
-        """Returns the phenotype serialized and in dict form,
-        :return: Serialized dictionary
-        """
-        # TODO: This is really slow, improve round trip, see
-        # https://github.com/pydantic/pydantic/issues/1409#issuecomment-650116116
-        if serialize:
-            return json.loads(self.json())
-        return super().dict(*args, **kwargs)
+    @property
+    def serialize(self):
+        """Serialized genotype and fields as dictionary."""
+        dataclass_items = dataclasses.asdict(self).items()
+        return {k: _encoder(v) for k, v in dataclass_items}
 
     def clone(self):
         """Copies the phenotype using a different id and empty score.
@@ -243,3 +235,15 @@ class GenotypeModel(BaseModel):
         clone.id = uuid.uuid4()  # Generate new id
         clone.score = None  # Reset the clone score
         return clone
+
+
+def _encoder(value):  # Genotype generic encoder
+    if isinstance(value, datetime):
+        return value.isoformat()
+    if isinstance(value, uuid.UUID):
+        return str(value)
+    if isinstance(value, Chromosome):
+        return value.astype("uint8").tolist()
+    if isinstance(value, list):
+        return [_encoder(x) for x in value]
+    return value

@@ -32,5 +32,4 @@ env = [
 ]
 
 [tool.pylint.messages_control]
-extension-pkg-whitelist = "pydantic"
 good-names = ["id", "n", "p", "db", "tx"]
