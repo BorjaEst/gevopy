@@ -52,11 +52,13 @@ instance of the defined class. You can use the init arguments `cache` and
 ```py
 from genopy import fitness
 
-class MyFitness1(fitness.FitnessModel):
+class MyFitness(fitness.FitnessModel):
     def score(self, phenotype):
-        return phenotype.chromosome.count(1)
+        x1 = phenotype.chromosome_1.count(1)
+        x2 = phenotype.chromosome_2.count(0)
+        return x1 + x2
 
-fx = MyFitness1(cache=True, parallel=True)
+fx = MyFitness(cache=True, parallel=True)
 ```
 > You can additionally define `setup` as method to execute once at the begining
 of each generation before phenotypes are evaluated.
