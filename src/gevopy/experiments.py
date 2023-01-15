@@ -242,6 +242,7 @@ class Execution():
         try:
             logger.info("Start of evolutionary experiment execution")
             session.eval_phenotypes(fitness, save=True)  # Evaluate first pop
+            self.halloffame.update(session.get_phenotypes())
             while not self.completed:
                 self.generation += 1  # Increase generation index
                 session.generate_offspring(algorithm, save=False)
