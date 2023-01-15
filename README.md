@@ -130,3 +130,9 @@ Storing relationships at the record level makes sense in genotype
 relationships as it provides index-free adjacency.
 Graph traversal operations such 'genealogy tree' or certain matches can
 be performed with no index lookups leading to much better performance.
+
+### Why pydantic instead of dataclass?
+Pydantic supports validation of fields during and after the
+initialization process and makes parsing easier. 
+Parsing is a relevant step if you are planing to save your
+phenotypes into the connected database.
