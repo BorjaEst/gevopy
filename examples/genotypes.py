@@ -11,7 +11,7 @@ from gevopy.genetics import Diploid, GenotypeModel, Haploid, field
 
 
 # ------------------------------------------------------------------
-# Genotype ---------------------------------------------------------
+# Bacteria ---------------------------------------------------------
 # This genotypes are known to have asexual reproduction and with a
 # unique chromosome. In this example values can be only between 0 and 1
 # See https://docs.python.org/3/library/dataclasses.html
@@ -22,7 +22,7 @@ class Bacteria(GenotypeModel):
 
 
 # ------------------------------------------------------------------
-# Genotype ---------------------------------------------------------
+# JackJumper -------------------------------------------------------
 # Although males are know to be composed by haploids, this is a good
 # example of how to design a chromosome where values can take more
 # values than 1 or 0 (0-3) due to that each value in the chromosome
