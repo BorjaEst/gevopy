@@ -43,7 +43,9 @@ def session(experiment, population):
 @fixture(scope="class")
 def execution(session, max_generation, max_score):
     """Fixture to run an experiment and return execution"""
-    return session.run(max_generation=max_generation, max_score=max_score)
+    kwds = dict(max_generation=max_generation, max_score=max_score)
+    kwds = {k: v for k, v in kwds.items() if v is not None}
+    return session.run(**kwds)
 
 
 # Requirements ------------------------------------------------------
