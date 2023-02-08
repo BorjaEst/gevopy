@@ -225,7 +225,7 @@ class EmptyInterface(Interface):
         """
         phenotypes = list(phenotypes)
         cls.logger.debug('Adding phenotypes %s', phenotypes)
-        return list(str(p.id) for p in phenotypes)
+        return list(p['id'] for p in phenotypes)
 
     @classmethod
     def get_phenotypes(cls, _container, ids):
