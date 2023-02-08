@@ -26,7 +26,7 @@ def driver_kwds(request):
     return request.param
 
 
-@fixture(scope="session", params=["Neo4jInterface"])
+@fixture(scope="session", params=["Neo4jInterface", "EmptyInterface"])
 def db_interface(request, driver_kwds):
     """Fixture to return the experiment interface for the database"""
     match request.param:

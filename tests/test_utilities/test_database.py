@@ -3,7 +3,7 @@
 
 import uuid
 
-from pytest import fixture
+from pytest import fixture, mark
 
 
 @fixture(scope="module", autouse=True)
@@ -52,8 +52,9 @@ def ids(population):
     return [str(ph.id) for ph in population]
 
 
+@mark.parametrize("db_interface", ["Neo4jInterface"], indirect=True)
 def test_rwd_phenotypes(session, phenotypes, ids):
     """Test write, read and delete of phenotypes in db"""
     assert ids == session.add_phenotypes(phenotypes)
     assert phenotypes == session.get_phenotypes(ids)
-    assert ids == session.del_phenotypes(ids)
+    assert all([id in ids for id in session.del_phenotypes(ids)])

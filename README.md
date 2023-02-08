@@ -52,11 +52,13 @@ instance of the defined class. You can use the init arguments `cache` and
 ```py
 from genopy import fitness
 
-class MyFitness1(fitness.FitnessModel):
+class MyFitness(fitness.FitnessModel):
     def score(self, phenotype):
-        return phenotype.chromosome.count(1)
+        x1 = phenotype.chromosome_1.count(1)
+        x2 = phenotype.chromosome_2.count(0)
+        return x1 + x2
 
-fx = MyFitness1(cache=True, parallel=True)
+fx = MyFitness(cache=True, parallel=True)
 ```
 > You can additionally define `setup` as method to execute once at the begining
 of each generation before phenotypes are evaluated.
@@ -102,7 +104,7 @@ instantiating the experiment to store all phenotypes during the execution.
 import gevopy as ea
 
 experiment = ea.Experiment(
-    fitness=MyFitness(cached=True, schedule="synchronous"),
+    fitness=MyFitness(cache=True, schedule="synchronous"),
     algorithm=MyAlgorithm(survival_rate=0.2),
 )
 
@@ -128,3 +130,13 @@ Storing relationships at the record level makes sense in genotype
 relationships as it provides index-free adjacency.
 Graph traversal operations such 'genealogy tree' or certain matches can
 be performed with no index lookups leading to much better performance.
+
+### Why pydantic instead of dataclass?
+Pydantic supports validation of fields during and after the
+initialization process and makes parsing easier. 
+Parsing is a relevant step if you are planing to save your
+phenotypes into the connected database.
+
+### Limitations
+Collections containing collections can not be stored in properties.
+Property values can only be of primitive types or arrays in Neo4J Cypher queries.

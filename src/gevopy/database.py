@@ -225,7 +225,7 @@ class EmptyInterface(Interface):
         """
         phenotypes = list(phenotypes)
         cls.logger.debug('Adding phenotypes %s', phenotypes)
-        return list(str(p.id) for p in phenotypes)
+        return list(p['id'] for p in phenotypes)
 
     @classmethod
     def get_phenotypes(cls, _container, ids):
@@ -409,8 +409,9 @@ def get_phenotypes(tx, ids):
         "WITH x, e, collect(y.id) as p "
         "RETURN x{.*, .score, experiment:e.name, parents:p } "
     )
-    result = tx.run(query, phenotypes_ids=ids)
-    return [dict(record["x"]) for record in result]
+    result = [dict(r["x"]) for r in tx.run(query, phenotypes_ids=ids)]
+    result.sort(key=lambda r: ids.index(r['id']))
+    return result
 
 
 @neo4j.unit_of_work(timeout=config['timeout'])

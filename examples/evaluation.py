@@ -16,7 +16,7 @@ class MostOnes(FitnessModel):
 
 
 # ------------------------------------------------------------------
-# Fitness ----------------------------------------------------------
+# Random -----------------------------------------------------------
 # This fitness object scores each phenotypes completelly random.
 class Random(FitnessModel):
     """Fitness model assigns a random score between 0-1"""

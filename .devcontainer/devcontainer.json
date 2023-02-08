@@ -16,9 +16,6 @@
 	// connected. This is typically a file mount in .devcontainer/docker-compose.yml
 	"workspaceFolder": "/workspace",
 	"features": {
-		"ghcr.io/devcontainers/features/node:1": {
-			"version": "lts"
-		},
 		"ghcr.io/devcontainers/features/common-utils:1": { },
 		"ghcr.io/devcontainers/features/git:1": { },
 		"ghcr.io/devcontainers/features/nvidia-cuda:1": { },

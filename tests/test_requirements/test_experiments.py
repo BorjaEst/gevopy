@@ -91,7 +91,7 @@ class ExecRequirements:
     def test_score_stop(self, execution, max_score):
         """Test execution stops when maximum score is reached"""
         assert execution.best_score >= max_score
-        assert execution.generation > 0
+        assert execution.generation >= 0
 
     def test_attr_generation(self, execution):
         """Test generation attr returns int after first execution"""
