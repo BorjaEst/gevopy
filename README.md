@@ -136,3 +136,7 @@ Pydantic supports validation of fields during and after the
 initialization process and makes parsing easier. 
 Parsing is a relevant step if you are planing to save your
 phenotypes into the connected database.
+
+### Limitations
+Collections containing collections can not be stored in properties.
+Property values can only be of primitive types or arrays in Neo4J Cypher queries.
