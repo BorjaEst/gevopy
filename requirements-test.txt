@@ -7,3 +7,4 @@ pytest-env
 flake8
 black
 bandit
+nbconvert

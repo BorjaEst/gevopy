@@ -130,3 +130,6 @@ dmypy.json
 
 # Whiteboard files
 whiteboard.py
+
+# Gimp files
+*.xcf
