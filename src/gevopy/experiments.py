@@ -207,6 +207,9 @@ class Session(BaseModel):
                 self.eval_phenotypes(self.fitness, save=True)
                 execution.halloffame.update(self.get_phenotypes())
                 logger.info("Completed cycle; %s", execution.best_score)
+        except KeyboardInterrupt:
+            logger.error("Experiment cancelled by the user 'CTRL+C'")
+            return execution
         except Exception as err:
             logger.error("Error %s raised during experiment execution", err)
             raise err
