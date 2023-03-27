@@ -159,27 +159,21 @@ instantiating the experiment to store all phenotypes during the execution.
 ```python
 import gevopy as ea
 
-experiment = ea.Experiment(
-    fitness=MyFitness(cache=True, scheduler="synchronous"),
-    algorithm=MyAlgorithm(survival_rate=0.2),
-)
-
+experiment = ea.Experiment()
 with experiment.session() as session:
     session.add_phenotypes([MyGenotype() for _ in range(20)])
+    session.algorithm = MyAlgorithm(survival_rate=0.2)
+    session.fitness = MyFitness(cache=True, scheduler="synchronous")
     statistics = session.run(max_generation=20, max_score=10)
 
 experiment.close()
 statistics
 ```
 
-
-
-
     Evolutionary algorithm execution report:
       Executed generations: 12
       Best phenotype: 7b13630f-d07c-4ff6-8be1-df6d6ceb06ca
       Best score: 10
-
 
 
 >The method `run` forces the evolution of the experiment which is updated on
