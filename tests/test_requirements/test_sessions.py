@@ -2,7 +2,6 @@
 # pylint: disable=redefined-outer-name
 # pylint: disable=unused-argument
 
-from copy import deepcopy
 from inspect import ismethod
 
 from pytest import fixture, mark, raises
@@ -107,4 +106,4 @@ class TestSessions(AttrRequirements, ExecRequirements, ErrRequirements):
         assert hasattr(session, "reset_score")
         assert ismethod(session.reset_score)
         session.reset_score()
-        assert all(x.score == None for x in session._population)
+        assert all(x.score is None for x in session._population)

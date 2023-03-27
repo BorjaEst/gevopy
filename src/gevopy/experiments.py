@@ -14,7 +14,7 @@ parameters at the end of the evolution process.
 import contextlib
 import logging
 import uuid
-from typing import List, Optional
+from typing import List
 
 from pydantic import BaseModel, Extra, Field, PrivateAttr
 
