@@ -40,7 +40,7 @@ def db_interface(request, driver_kwds):
 
 @fixture(scope="session", params=["Bacteria", "JackJumper"])
 def genotype(request):
-    """Fixture to return the phenotype generator from example"""
+    """Fixture to return the genotype generator from example"""
     return examples.genotypes.__dict__[request.param]
 
 
@@ -58,7 +58,7 @@ def algorithm(request):
 
 @fixture(scope="session", params=[10, 20])
 def population_size(request):
-    """Parametrization for the number of phenotypes in the population"""
+    """Parametrization for the number of genotypes in the population"""
     return request.param
 
 

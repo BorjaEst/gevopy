@@ -12,13 +12,13 @@ from gevopy.tools import crossover
 # Module fixtures ---------------------------------------------------
 @fixture(scope="class")
 def children(crossover, parents):
-    """Fixture to return crossovered phenotypes from base"""
+    """Fixture to return crossovered genotypes from base"""
     return crossover(parents[0], parents[1])
 
 
 @fixture(scope="class")
 def parents(genotype):
-    """Fixture to generate a base phenotypes to cross"""
+    """Fixture to generate a base genotypes to cross"""
     return genotype(), genotype()
 
 
@@ -47,7 +47,7 @@ class ExecutionRequirements:
     """Tests group for Crossover execution features"""
 
     def test_keeps_genotype(self, parents, children):
-        """Test crossover does not alter phenotype"""
+        """Test crossover does not alter genotype"""
         assert all(isinstance(x, genetics.GenotypeModel) for x in children)
         assert all(type(p) is type(x) for p, x in zip(parents, children))
 

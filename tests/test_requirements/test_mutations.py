@@ -11,14 +11,14 @@ from gevopy.tools import mutation
 
 # Module fixtures ---------------------------------------------------
 @fixture(scope="class")
-def phenotype(mutation, original):
-    """Fixture to return a mutated phenotype from base"""
+def mutated(mutation, original):
+    """Fixture to return a mutated genotype from base"""
     return mutation(original)
 
 
 @fixture(scope="class")
 def original(genotype):
-    """Fixture to generate a base phenotype to mutate"""
+    """Fixture to generate a base genotype to mutate"""
     return genotype()
 
 
@@ -40,18 +40,18 @@ class AttrRequirements:
 class ExecutionRequirements:
     """Tests group for Mutation execution features"""
 
-    def test_keeps_genotype(self, original, phenotype):
-        """Test mutation does not alter phenotype"""
-        assert isinstance(phenotype, genetics.GenotypeModel)
-        assert type(original) is type(phenotype)
+    def test_keeps_genotype(self, original, mutated):
+        """Test mutation does not alter genotype"""
+        assert isinstance(mutated, genetics.GenotypeModel)
+        assert type(original) is type(mutated)
 
-    def test_mutated_diff(self,  original, phenotype):
-        """Test mutation returns different object than phenotype"""
-        assert original is not phenotype
+    def test_mutated_diff(self,  original, mutated):
+        """Test mutation returns different object than genotype"""
+        assert original is not mutated
 
-    def test_all_ids_keep(self,  original, phenotype):
-        """Test mutation does not alter phenotype id"""
-        assert original.id == phenotype.id
+    def test_all_ids_keep(self,  original, mutated):
+        """Test mutation does not alter genotype id"""
+        assert original.id == mutated.id
 
 
 # Parametrization ---------------------------------------------------
@@ -64,11 +64,11 @@ class TestSinglePoint(AttrRequirements, ExecutionRequirements):
         return mutation.SinglePoint(mutpb=request.param)
 
     @mark.parametrize("mutation", [0.0], indirect=True)
-    def test_mutpb_000(self, original, phenotype):
+    def test_mutpb_000(self, original, mutated):
         """Tests that no mutation does not modity chromosome"""
-        assert original.chromosome == phenotype.chromosome
+        assert original.chromosome == mutated.chromosome
 
     @mark.parametrize("mutation", [1.0], indirect=True)
-    def test_mutpb_100(self, original, phenotype):
+    def test_mutpb_100(self, original, mutated):
         """Tests that mutation does modity chromosome"""
-        assert original.chromosome != phenotype.chromosome
+        assert original.chromosome != mutated.chromosome

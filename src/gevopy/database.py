@@ -57,31 +57,31 @@ class Interface(abc.ABC):
 
     @classmethod
     @abc.abstractmethod
-    def add_phenotypes(cls, container, phenotypes):
-        """Creates new phenotypes in the database and returns the ids.
+    def add_genotypes(cls, container, genotypes):
+        """Creates new genotypes in the database and returns the ids.
         :param container: Session container for database session
-        :param phenotypes: List/iter of serialized phenotypes to store
-        :return: List of ids from the created phenotypes
+        :param genotypes: List/iter of serialized genotypes to store
+        :return: List of ids from the created genotypes
         """
         raise NotImplementedError
 
     @classmethod
     @abc.abstractmethod
-    def get_phenotypes(cls, container, ids):
-        """Reads the database and returns the matching id phenotypes.
+    def get_genotypes(cls, container, ids):
+        """Reads the database and returns the matching id genotypes.
         :param container: Session container for database session
-        :param ids: Ids from the phenotypes to collect
-        :return: Serialized phenotypes matching the input ids
+        :param ids: Ids from the genotypes to collect
+        :return: Serialized genotypes matching the input ids
         """
         raise NotImplementedError
 
     @classmethod
     @abc.abstractmethod
-    def del_phenotypes(cls, container, ids):
-        """Deletes from database and returns the matching id phenotypes.
+    def del_genotypes(cls, container, ids):
+        """Deletes from database and returns the matching id genotypes.
         :param container: Session container for database session
-        :param ids: Ids from the phenotypes to collect
-        :return: Deleted phenotypes matching the input ids
+        :param ids: Ids from the genotypes to collect
+        :return: Deleted genotypes matching the input ids
         """
         raise NotImplementedError
 
@@ -133,37 +133,37 @@ class Neo4jInterface(Interface):
             self.logger.debug("Exit neo4j database session: %s", db_session)
 
     @classmethod
-    def add_phenotypes(cls, container, phenotypes):
-        """Creates new phenotypes in the database and returns the ids.
+    def add_genotypes(cls, container, genotypes):
+        """Creates new genotypes in the database and returns the ids.
         :param container: Session container for neo4j session
-        :param phenotypes: List/iter of serialized phenotypes to store
-        :return: List of ids from the created phenotypes
+        :param genotypes: List/iter of serialized genotypes to store
+        :return: List of ids from the created genotypes
         """
-        phenotypes = list(phenotypes)
-        cls.logger.debug('Adding phenotypes %s', phenotypes)
-        return container.session.execute_write(add_phenotypes, phenotypes)
+        genotypes = list(genotypes)
+        cls.logger.debug('Adding genotypes %s', genotypes)
+        return container.session.execute_write(add_genotypes, genotypes)
 
     @classmethod
-    def get_phenotypes(cls, container, ids):
-        """Reads the database and returns the matching id phenotypes.
+    def get_genotypes(cls, container, ids):
+        """Reads the database and returns the matching id genotypes.
         :param container: Session container for neo4j session
-        :param ids: Ids from the phenotypes to collect
-        :return: Serialized phenotypes matching the input ids
+        :param ids: Ids from the genotypes to collect
+        :return: Serialized genotypes matching the input ids
         """
         ids = list(str(id) for id in ids)
-        cls.logger.debug('Getting phenotypes %s', ids)
-        return container.session.execute_read(get_phenotypes, ids)
+        cls.logger.debug('Getting genotypes %s', ids)
+        return container.session.execute_read(get_genotypes, ids)
 
     @classmethod
-    def del_phenotypes(cls, container, ids):
-        """Deletes from database and returns the matching id phenotypes.
+    def del_genotypes(cls, container, ids):
+        """Deletes from database and returns the matching id genotypes.
         :param container: Session container for database session
-        :param ids: Ids from the phenotypes to delete
-        :return: Deleted phenotypes matching the input ids
+        :param ids: Ids from the genotypes to delete
+        :return: Deleted genotypes matching the input ids
         """
         ids = list(str(id) for id in ids)
-        cls.logger.debug('Deleting phenotypes %s', ids)
-        return container.session.execute_write(del_phenotypes, ids)
+        cls.logger.debug('Deleting genotypes %s', ids)
+        return container.session.execute_write(del_genotypes, ids)
 
     @classmethod
     def del_experiment(cls, container, name):
@@ -217,36 +217,36 @@ class EmptyInterface(Interface):
         self.logger.debug("Exit mock database session: %s", db_session)
 
     @classmethod
-    def add_phenotypes(cls, _container, phenotypes):
-        """Creates new phenotypes in the database and returns the ids.
+    def add_genotypes(cls, _container, genotypes):
+        """Creates new genotypes in the database and returns the ids.
         :param container: Session container (Not used)
-        :param phenotypes: List/iter of serialized phenotypes to store
-        :return: List of ids from the created phenotypes
+        :param genotypes: List/iter of serialized genotypes to store
+        :return: List of ids from the created genotypes
         """
-        phenotypes = list(phenotypes)
-        cls.logger.debug('Adding phenotypes %s', phenotypes)
-        return list(p['id'] for p in phenotypes)
+        genotypes = list(genotypes)
+        cls.logger.debug('Adding genotypes %s', genotypes)
+        return list(p['id'] for p in genotypes)
 
     @classmethod
-    def get_phenotypes(cls, _container, ids):
-        """Reads the database and returns the matching id phenotypes.
+    def get_genotypes(cls, _container, ids):
+        """Reads the database and returns the matching id genotypes.
         :param container: Session container (Not used)
-        :param ids: Ids from the phenotypes to collect
-        :return: Serialized phenotypes matching the input ids
+        :param ids: Ids from the genotypes to collect
+        :return: Serialized genotypes matching the input ids
         """
         ids = list(str(id) for id in ids)
-        cls.logger.debug('Getting phenotypes %s', ids)
+        cls.logger.debug('Getting genotypes %s', ids)
         return []
 
     @classmethod
-    def del_phenotypes(cls, _container, ids):
-        """Deletes from database and returns the matching id phenotypes.
+    def del_genotypes(cls, _container, ids):
+        """Deletes from database and returns the matching id genotypes.
         :param container: Session container (Not used)
-        :param ids: Ids from the phenotypes to delete
-        :return: Deleted phenotypes matching the input ids
+        :param ids: Ids from the genotypes to delete
+        :return: Deleted genotypes matching the input ids
         """
         ids = list(str(id) for id in ids)
-        cls.logger.debug('Deleting phenotypes %s', ids)
+        cls.logger.debug('Deleting genotypes %s', ids)
         return []
 
     @classmethod
@@ -290,26 +290,26 @@ class AbstractSession(abc.ABC):
         raise NotImplementedError
 
     @abc.abstractmethod
-    def add_phenotypes(self, phenotypes):
-        """Creates new phenotypes in the database and returns the ids.
-        :param phenotypes: List/iter of serialized phenotypes to store
-        :return: List of ids from the created phenotypes
+    def add_genotypes(self, genotypes):
+        """Creates new genotypes in the database and returns the ids.
+        :param genotypes: List/iter of serialized genotypes to store
+        :return: List of ids from the created genotypes
         """
         raise NotImplementedError
 
     @abc.abstractmethod
-    def get_phenotypes(self, ids):
-        """Reads the database and returns the matching id phenotypes.
-        :param ids: Ids from the phenotypes to collect
-        :return: Serialized phenotypes matching the input ids
+    def get_genotypes(self, ids):
+        """Reads the database and returns the matching id genotypes.
+        :param ids: Ids from the genotypes to collect
+        :return: Serialized genotypes matching the input ids
         """
         raise NotImplementedError
 
     @abc.abstractmethod
-    def del_phenotypes(self, ids):
-        """Deletes from database and returns the matching id phenotypes.
-        :param ids: Ids from the phenotypes to delete
-        :return: Deleted phenotypes matching the input ids
+    def del_genotypes(self, ids):
+        """Deletes from database and returns the matching id genotypes.
+        :param ids: Ids from the genotypes to delete
+        :return: Deleted genotypes matching the input ids
         """
         raise NotImplementedError
 
@@ -332,28 +332,28 @@ class SessionContainer(AbstractSession):
         return ~self.interface.closed(self.session)
 
     @AbstractSession.require_session
-    def add_phenotypes(self, phenotypes):
-        """Creates new phenotypes in the database and returns the ids.
-        :param phenotypes: List/iter of serialized phenotypes to store
-        :return: List of ids from the created phenotypes
+    def add_genotypes(self, genotypes):
+        """Creates new genotypes in the database and returns the ids.
+        :param genotypes: List/iter of serialized genotypes to store
+        :return: List of ids from the created genotypes
         """
-        return self.interface.add_phenotypes(self, phenotypes)
+        return self.interface.add_genotypes(self, genotypes)
 
     @AbstractSession.require_session
-    def get_phenotypes(self, ids):
-        """Reads the database and returns the matching id phenotypes.
-        :param ids: Ids from the phenotypes to collect
-        :return: Serialized phenotypes matching the input ids
+    def get_genotypes(self, ids):
+        """Reads the database and returns the matching id genotypes.
+        :param ids: Ids from the genotypes to collect
+        :return: Serialized genotypes matching the input ids
         """
-        return self.interface.get_phenotypes(self, ids)
+        return self.interface.get_genotypes(self, ids)
 
     @AbstractSession.require_session
-    def del_phenotypes(self, ids):
-        """Deletes from database and returns the matching id phenotypes.
-        :param ids: Ids from the phenotypes to delete
-        :return: Deleted phenotypes matching the input ids
+    def del_genotypes(self, ids):
+        """Deletes from database and returns the matching id genotypes.
+        :param ids: Ids from the genotypes to delete
+        :return: Deleted genotypes matching the input ids
         """
-        return self.interface.del_phenotypes(self, ids)
+        return self.interface.del_genotypes(self, ids)
 
     @AbstractSession.require_session
     def del_experiment(self, name):
@@ -366,24 +366,24 @@ class SessionContainer(AbstractSession):
 # NEO4J Transactions ------------------------------------------------
 
 @neo4j.unit_of_work(timeout=config['timeout'])
-def add_phenotypes(tx, phenotypes):
-    """Transaction function to create new phenotypes in the database.
+def add_genotypes(tx, genotypes):
+    """Transaction function to create new genotypes in the database.
     :param tx: Neo4j transaction object
-    :param phenotypes: List of serialized phenotype to store
-    :return: List of ids from the created phenotypes
+    :param genotypes: List of serialized genotype to store
+    :return: List of ids from the created genotypes
     """
     query = (
-        "UNWIND $phenotypes AS phenotype "
-        "MERGE (x:Phenotype { id: phenotype.id }) "
-        "SET x = phenotype, x.parents = null, x.experiment = null "
-        "WITH phenotype, x as child "
+        "UNWIND $genotypes AS genotype "
+        "MERGE (x:genotype { id: genotype.id }) "
+        "SET x = genotype, x.parents = null, x.experiment = null "
+        "WITH genotype, x as child "
         "CALL { "
-        "  WITH child, phenotype "
-        "  UNWIND phenotype.parents as parent_id "
-        "  MATCH (parent:Phenotype { id: parent_id }) "
+        "  WITH child, genotype "
+        "  UNWIND genotype.parents as parent_id "
+        "  MATCH (parent:genotype { id: parent_id }) "
         "  MERGE (parent)-[:HAS_CHILD]->(child) "
         "} "
-        "WITH child as x, phenotype.experiment as experiment "
+        "WITH child as x, genotype.experiment as experiment "
         "WHERE NOT experiment IS NULL "
         "CALL { "
         "  WITH x, experiment "
@@ -391,43 +391,43 @@ def add_phenotypes(tx, phenotypes):
         "  MERGE (x)-[:IN_EXPERIMENT]->(e) "
         "} "
     )
-    tx.run(query, phenotypes=phenotypes)
-    return [p['id'] for p in phenotypes]
+    tx.run(query, genotypes=genotypes)
+    return [p['id'] for p in genotypes]
 
 
 @neo4j.unit_of_work(timeout=config['timeout'])
-def get_phenotypes(tx, ids):
-    """Transaction to returns the matching id phenotypes.
+def get_genotypes(tx, ids):
+    """Transaction to returns the matching id genotypes.
     :param tx: Neo4j transaction object
-    :param ids: Ids from the phenotypes to collect
-    :return: Serialized phenotypes matching the input ids
+    :param ids: Ids from the genotypes to collect
+    :return: Serialized genotypes matching the input ids
     """
     query = (
-        "MATCH (x:Phenotype) WHERE x.id IN $phenotypes_ids "
+        "MATCH (x:genotype) WHERE x.id IN $genotypes_ids "
         "OPTIONAL MATCH (x)-[:IN_EXPERIMENT]->(e:Experiment) "
         "OPTIONAL MATCH (y)-[:HAS_CHILD]->(x) "
         "WITH x, e, collect(y.id) as p "
-        "RETURN x{.*, .score, experiment:e.name, parents:p } "
+        "RETURN x{.*, experiment:e.name, parents:p } "
     )
-    result = [dict(r["x"]) for r in tx.run(query, phenotypes_ids=ids)]
+    result = [dict(r["x"]) for r in tx.run(query, genotypes_ids=ids)]
     result.sort(key=lambda r: ids.index(r['id']))
     return result
 
 
 @neo4j.unit_of_work(timeout=config['timeout'])
-def del_phenotypes(tx, ids):
-    """Transaction to delete the matching id phenotypes.
+def del_genotypes(tx, ids):
+    """Transaction to delete the matching id genotypes.
     :param tx: Neo4j transaction object
-    :param ids: Ids from the phenotypes to collect
-    :return: Ids of the matched and deleted phenotypes
+    :param ids: Ids from the genotypes to collect
+    :return: Ids of the matched and deleted genotypes
     """
     query = (
-        "MATCH (x:Phenotype) WHERE x.id IN $phenotypes_ids "
-        "WITH x as phenotype, x.id AS id "
-        "DETACH DELETE phenotype "
+        "MATCH (x:genotype) WHERE x.id IN $genotypes_ids "
+        "WITH x as genotype, x.id AS id "
+        "DETACH DELETE genotype "
         "RETURN id "
     )
-    result = tx.run(query, phenotypes_ids=ids)
+    result = tx.run(query, genotypes_ids=ids)
     return [record["id"] for record in result]
 
 

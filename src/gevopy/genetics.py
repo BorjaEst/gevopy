@@ -24,7 +24,7 @@ from gevopy import random as ea_random
 class Chromosome(np.ndarray, MutableSequence):
     """A chromosome is a long DNA molecule with part or all of the genetic
     material of an organism. In the case of Evolutionary Algorithms it
-    contains the information required to evaluate a phenotype.
+    contains the information required to evaluate a genotype.
 
     This library bases chromosomes on numpy.ndarray to and therefore when
     creating one, the steps defined at `subclassing ndarray` must be followed.
@@ -201,12 +201,11 @@ class GenotypeModel(BaseModel):
     organisms might have different numbers of chromosomes.
 
     When subclassing a genotype note the following attributes are reserved:
-     - id: A unique identifier for the phenotype
-     - experiment: Name of the experiment the phenotype belongs, can be None
-     - created: Datetime when the phenotype was instantiated
-     - parents: List of phenotype ids used to generate the phenotype
+     - id: A unique identifier for the genotype
+     - experiment: Name of the experiment the genotype belongs, can be None
+     - created: Datetime when the genotype was instantiated
+     - parents: List of genotype ids used to generate the genotype
      - generation: Positive integer indicating the evolution generations
-     - score: Float indicating the phenotype score (None, when not evaluated)
      - clone: Method to produce a genotype deep copy with different id
     """
 
@@ -215,7 +214,6 @@ class GenotypeModel(BaseModel):
     created: datetime = Field(default_factory=datetime.utcnow)
     parents: List[uuid.UUID] = []
     generation: PositiveInt = Field(default=1)
-    score: float = None
 
     class Config:
         # pylint: disable=missing-class-docstring
@@ -226,7 +224,7 @@ class GenotypeModel(BaseModel):
         return pformat(self.__dict__, sort_dicts=False)
 
     def dict(self, *args, serialize=False, **kwargs):
-        """Returns the phenotype serialized and in dict form,
+        """Returns the genotype serialized and in dict form,
         :return: Serialized dictionary
         """
         # TODO: This is really slow, improve round trip, see
@@ -236,10 +234,9 @@ class GenotypeModel(BaseModel):
         return super().dict(*args, **kwargs)
 
     def clone(self):
-        """Copies the phenotype using a different id and empty score.
-        :return: Phenotype copy
+        """Copies the genotype and parameters using a different id.
+        :return: genotype copy
         """
         clone = copy.deepcopy(self)
         clone.id = uuid.uuid4()  # Generate new id
-        clone.score = None  # Reset the clone score
         return clone

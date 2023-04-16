@@ -38,24 +38,24 @@ class Mutation(ABC):
     For different genome types, different mutation types are suitable.
     """
 
-    def __call__(self, phenotype):
-        """Executes the mutation on a phenotype. If the phenotype was never
+    def __call__(self, genotype):
+        """Executes the mutation on a genotype. If the genotype was never
         evaluated, then clone is an exact copy maintaining id and parents.
-        :param phenotype: The phenotype to mutate
-        :return: Mutated phenotype
+        :param genotype: The genotype to mutate
+        :return: Mutated genotype
         """
-        match phenotype:
-            case _ if not isinstance(phenotype, genetics.GenotypeModel):
-                raise ValueError("Expected 'GenotypeModel' for 'phenotype'")
+        match genotype:
+            case _ if not isinstance(genotype, genetics.GenotypeModel):
+                raise ValueError("Expected 'GenotypeModel' for 'genotype'")
 
-        phenotype_copy = deepcopy(phenotype)
-        self.mutate_features(phenotype_copy.__dict__.values())
-        return phenotype_copy
+        genotype_copy = deepcopy(genotype)
+        self.mutate_features(genotype_copy.__dict__.values())
+        return genotype_copy
 
     def mutate_features(self, features):
-        """Recursively mutates phenotype features. For example a list of
+        """Recursively mutates genotype features. For example a list of
         diploids in the case of Eucaryote genotype.
-        :param features: Phenotype list of feature values
+        :param features: genotype list of feature values
         """
         for value in features:
             if isinstance(value, genetics.Chromosome):

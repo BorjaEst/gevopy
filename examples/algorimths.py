@@ -7,7 +7,7 @@ from gevopy.tools import crossover, mutation, selection
 # Basic Uniform Selection ------------------------------------------
 # This algorithm selects both matching partners using an uniform
 # distribution. Due to the fact that fitness does not play any role
-# on the selection of phenotypes, adaptation to the environment is
+# on the selection of genotypes, adaptation to the environment is
 # fully random.
 class BasicUniform(algorithms.Standard):
     selection1 = selection.Uniform()
@@ -20,7 +20,7 @@ class BasicUniform(algorithms.Standard):
 # Simple Ponderated Selection --------------------------------------
 # This algorithm selects one matching partners using a ponderated
 # distribution and the second with an uniform. Ponderated gives all
-# phenotypes a chance to reproduce proportional to the fitness score.
+# genotypes a chance to reproduce proportional to the fitness score.
 # However, the posibility that best matches best is reduced agains
 # two times ponderated.
 class BasicPonderated(algorithms.Standard):

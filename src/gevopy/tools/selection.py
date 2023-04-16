@@ -26,18 +26,18 @@ __all__ = methods.union({"Selection"})
 
 
 class Selection(ABC):
-    """A generic selection objext that returns an specific amount of phenotypes
+    """A generic selection objext that returns an specific amount of genotypes
     from a pool according to their scores. The main objective of this
-    selection procedure is to keep, crossover or mutate only those phenotypes
+    selection procedure is to keep, crossover or mutate only those genotypes
     that perform better on the solution of a problem or environment.
     """
 
     @abstractmethod
     def __call__(self, pool, n):
         """Executes the selection.
-        :param pool: A Pool of phenotypes.
-        :param n: The number of phenotypes to select
-        :returns: List with **n** selected phenotypes
+        :param pool: A Pool of genotypes.
+        :param n: The number of genotypes to select
+        :returns: List with **n** selected genotypes
         """
         raise NotImplementedError
 
@@ -54,16 +54,16 @@ class Selection(ABC):
 
 
 class Ponderated(Selection):
-    """Select *n* random phenotypes where each phenotype probability is
+    """Select *n* random genotypes where each genotype probability is
     ponderated by the normalized score (score[i]/sum(scores)). The list
-    returned contains references to the *pool phenotypes*.
+    returned contains references to the *pool genotypes*.
     """
 
     def __call__(self, pool, n):
-        """Executes the selection of 'n' phenotypes from a pool.
-        :param pool: A Pool of phenotypes.
-        :param n: The number of phenotypes to select
-        :returns: A list of selected phenotypes.
+        """Executes the selection of 'n' genotypes from a pool.
+        :param pool: A Pool of genotypes.
+        :param n: The number of genotypes to select
+        :returns: A list of selected genotypes.
         """
         match (pool, n):
             case _ if not isinstance(pool, Pool):
@@ -73,28 +73,28 @@ class Ponderated(Selection):
             case _ if not n >= 0:
                 raise ValueError("Value for 'n' cannot be lower than 0")
 
-        sum_scores = sum(pool.scores())
-        try:  # Divide R[0,1] segment with normalised phenotypes weigths
-            n_scores = [score / sum_scores for score in pool.scores()]
+        sum_scores = sum(pool.scores)
+        try:  # Divide R[0,1] segment with normalised genotypes weigths
+            n_scores = [score / sum_scores for score in pool.scores]
             n_prb = list(itertools.accumulate(n_scores))
         except ZeroDivisionError:
             return Uniform.__call__(self, pool, n)
 
         def choose(p):  # next avoids generating the whole list
             return next(x for x, r in zip(pool, n_prb) if r > p)
-        return [choose(p) for p in np.random.rand(n)]
+        return [choose(p).item for p in np.random.rand(n)]
 
 
 class Uniform(Selection):
-    """Select *n* random phenotypes where each phenotype probability is
-    equal. The list returned contains references to the *pool phenotypes*.
+    """Select *n* random genotypes where each genotype probability is
+    equal. The list returned contains references to the *pool genotypes*.
     """
 
     def __call__(self, pool, n):
-        """Executes the selection of 'n' phenotypes from a pool.
-        :param pool: A Pool of phenotypes.
-        :param n: The number of phenotypes to select
-        :returns: A list of selected phenotypes.
+        """Executes the selection of 'n' genotypes from a pool.
+        :param pool: A Pool of genotypes.
+        :param n: The number of genotypes to select
+        :returns: A list of selected genotypes.
         """
         match (pool, n):
             case _ if not isinstance(pool, Pool):
@@ -104,19 +104,19 @@ class Uniform(Selection):
             case _ if not n >= 0:
                 raise ValueError("Value for 'n' cannot be lower than 0")
 
-        return [random.choice(pool) for _ in range(n)]
+        return [random.choice(pool).item for _ in range(n)]
 
 
 class Best(Selection):
-    """Returns the best phenotype among the input *phenotypes* `n` times.
-    The returned list contains references to the input *phenotype*.
+    """Returns the best genotype among the input *genotypes* `n` times.
+    The returned list contains references to the input *genotype*.
     """
 
     def __call__(self, pool, n):
-        """Executes the selection of 'n' phenotypes from a pool.
-        :param pool: A Pool of phenotypes.
-        :param n: The number of phenotypes to return
-        :returns: A list of selected phenotypes.
+        """Executes the selection of 'n' genotypes from a pool.
+        :param pool: A Pool of genotypes.
+        :param n: The number of genotypes to return
+        :returns: A list of selected genotypes.
         """
         match (pool, n):
             case _ if not isinstance(pool, Pool):
@@ -126,19 +126,19 @@ class Best(Selection):
             case _ if not n >= 0:
                 raise ValueError("Value for 'n' cannot be lower than 0")
 
-        return [pool[0] for _ in range(n)]
+        return [pool[0].item for _ in range(n)]
 
 
 class Worst(Selection):
-    """Returns the worst phenotype among the input *phenotypes* `n` times.
-    The returned list contains references to the input *phenotype*.
+    """Returns the worst genotype among the input *genotypes* `n` times.
+    The returned list contains references to the input *genotype*.
     """
 
     def __call__(self, pool, n):
-        """Executes the selection of 'n' phenotypes from a pool.
-        :param pool: A Pool of phenotypes.
-        :param n: The number of phenotypes to return
-        :returns: A list of selected phenotypes.
+        """Executes the selection of 'n' genotypes from a pool.
+        :param pool: A Pool of genotypes.
+        :param n: The number of genotypes to return
+        :returns: A list of selected genotypes.
         """
         match (pool, n):
             case _ if not isinstance(pool, Pool):
@@ -148,12 +148,12 @@ class Worst(Selection):
             case _ if not n >= 0:
                 raise ValueError("Value for 'n' cannot be lower than 0")
 
-        return [pool[-1] for _ in range(n)]
+        return [pool[-1].item for _ in range(n)]
 
 
 class Tournaments(Selection):
-    """Select the best phenotype among *tournsize* randomly chosen phenotypes,
-    *n* times. The list returned contains references to the input *phenotypes*.
+    """Select the best genotype among *tournsize* randomly chosen genotypes,
+    *n* times. The list returned contains references to the input *genotypes*.
     """
 
     def __init__(self, tournsize=lambda n: math.floor(math.sqrt(n))):
@@ -176,10 +176,10 @@ class Tournaments(Selection):
                 raise ValueError("'tournsize' must be 'int' or 'LambdaType'")
 
     def __call__(self, pool, n):
-        """Executes the selection of 'n' phenotypes from a pool.
-        :param pool: A Pool of phenotypes.
-        :param n: The number of phenotypes to select
-        :returns: A list of selected phenotypes.
+        """Executes the selection of 'n' genotypes from a pool.
+        :param pool: A Pool of genotypes.
+        :param n: The number of genotypes to select
+        :returns: A list of selected genotypes.
         """
         match (pool, n):
             case _ if not isinstance(pool, Pool):
@@ -188,7 +188,10 @@ class Tournaments(Selection):
                 raise ValueError("Expected type 'int' for 'n'")
             case _ if not n >= 0:
                 raise ValueError("Value for 'n' cannot be lower than 0")
-
         tournsize = self.tournsize(n)
-        aspirants = [Uniform.__call__(self, pool, tournsize) for _ in range(n)]
-        return [max(x, key=lambda x: x.score) for x in aspirants]
+
+        def tournament():
+            return [random.choice(pool) for _ in range(tournsize)]
+
+        aspirants = [tournament() for _ in range(n)]
+        return [max(x, key=lambda x: x.score).item for x in aspirants]

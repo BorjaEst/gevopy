@@ -1,5 +1,5 @@
 """The :mod:`fitness` module is intended to contain parent classes to create
-the procedures required to evaluate the experiment phenotypes for evolution.
+the procedures required to evaluate the experiment genotypes for evolution.
 
 Similarly to the rest of modules in this library, a class desing is selected
 so the user can define multiple methods to obtain a highly customisable
@@ -14,7 +14,7 @@ from abc import ABC, abstractmethod
 
 from dask import compute, delayed
 
-from gevopy import genetics
+from gevopy import genetics, tools
 
 
 class _HasCache():
@@ -64,7 +64,7 @@ class _HasScheduler():
 
     @scheduler.setter
     def scheduler(self, value):
-        """Configures/edits the dask scheduler for phenotypes evaluation.
+        """Configures/edits the dask scheduler for genotypes evaluation.
         :param value: A string containing one of the 'scheduler_options'
         """
         if value not in self.scheduler_options:
@@ -73,61 +73,61 @@ class _HasScheduler():
 
 
 class FitnessModel(_HasCache, _HasScheduler, ABC):
-    """Fitness base class to run phenotypes evaluation.
-    It requires the user to define a `score` method which takes a phenotype
+    """Fitness base class to run genotypes evaluation.
+    It requires the user to define a `score` method which takes a genotype
     as input and returns its score value. Use cache and scheduler to control
     how the evaluation is executed:
 
-      - If phenotype score does not change between generations, you can use
-        `cache=True` to skip score computation on those phenotypes whose id
+      - If genotype score does not change between generations, you can use
+        `cache=True` to skip score computation on those genotypes whose id
         has been already evaluated.
 
-      - If phenotypes interact between them, or have some waiting times on
+      - If genotypes interact between them, or have some waiting times on
         the evaluation process, you might want to set `scheduler="threads"`
-        to run multiple phenotypes in parallel. Scheduler is based on Dask,
+        to run multiple genotypes in parallel. Scheduler is based on Dask,
         see https://docs.dask.org/en/stable/scheduling.html
 
     Additionally you can configure a setUp function which would be executed
-    once, before evaluating the phenotypes.
+    once, before evaluating the genotypes.
     """
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
-    def __call__(self, phenotypes):
-        """Fitness call to calculate phenotype scores.
-        :param phenotypes: List with phenotypes to score
+    def __call__(self, genotypes):
+        """Fitness call to calculate genotype scores.
+        :param genotypes: List with genotypes to score
+        :return: Pool with genotypes
         """
-        self.setup(phenotypes)
-        delayeds = [delayed(self.worker)(ph) for ph in phenotypes]
+        self.setup(genotypes)
+        delayeds = [delayed(self.worker)(ph) for ph in genotypes]
         scores = compute(*delayeds, scheduler=self.scheduler)
-        for phenotype, score in zip(phenotypes, scores):
-            phenotype.score = score
+        pool = tools.Pool([tools.PoolItem(*x) for x in zip(scores, genotypes)])
         if self.cache:
-            self._cv = {ph.id: ph.score for ph in phenotypes}
+            self._cv = {x.item.id: x.score for x in pool}
+        return pool
 
-    def setup(self, phenotypes):
-        """Fitness function designed to prepare the phenotypes evaluation.
-        :param phenotypes: List with phenotypes to score
+    def setup(self, genotypes):
+        """Fitness function designed to prepare the genotypes evaluation.
+        :param genotypes: List with genotypes to score
         """
         pass  # pylint: disable=unnecessary-pass
 
-    def worker(self, phenotype):
+    def worker(self, genotype):
         """Fitness wrap to return cached score value if configured.
-        :param phenotype: Phenotype to evaluate
-        :return: Phenotype score
+        :param genotype: genotype to evaluate
+        :return: genotype score
         """
-        assert isinstance(phenotype, genetics.GenotypeModel)
-        if self.cache and phenotype.id in self._cv:
-            return self._cv[phenotype.id]
+        if self.cache and genotype.id in self._cv:
+            return self._cv[genotype.id]
         else:
-            return self.score(phenotype)
+            return self.score(genotype)
 
     @abstractmethod
-    def score(self, phenotype):
-        """Abstract function to return the score value of a phenotype.
-        :param phenotype: Phenotype to evaluate
-        :return: Phenotype score
+    def score(self, genotype):
+        """Abstract function to return the score value of a genotype.
+        :param genotype: genotype to evaluate
+        :return: genotype score
         """
         raise NotImplementedError
 

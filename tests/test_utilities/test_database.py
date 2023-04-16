@@ -28,33 +28,33 @@ def clean_experiment(session, experiment_name):
 
 @fixture(scope="function", autouse=True)
 def add_experiment(population, experiment_name):
-    """Fixture to add experiment to some phenotypes"""
-    for phenotype in population[::2]:
-        phenotype.experiment = experiment_name
+    """Fixture to add experiment to some genotypes"""
+    for genotype in population[::2]:
+        genotype.experiment = experiment_name
 
 
 @fixture(scope="function", autouse=True)
 def add_parents(population):
-    """Fixture to create parent relatioships between phenotypes"""
+    """Fixture to create parent relatioships between genotypes"""
     for child, parent in zip(population, population[1:]):
         child.parents = [parent.id]
 
 
 @fixture(scope="function")
-def phenotypes(population):
-    """Fixture to return phenotypes ids from population"""
+def genotypes(population):
+    """Fixture to return genotypes ids from population"""
     return [p.dict(serialize=True) for p in population]
 
 
 @fixture(scope="function")
 def ids(population):
-    """Fixture to return phenotypes ids from population"""
+    """Fixture to return genotypes ids from population"""
     return [str(ph.id) for ph in population]
 
 
 @mark.parametrize("db_interface", ["Neo4jInterface"], indirect=True)
-def test_rwd_phenotypes(session, phenotypes, ids):
-    """Test write, read and delete of phenotypes in db"""
-    assert ids == session.add_phenotypes(phenotypes)
-    assert phenotypes == session.get_phenotypes(ids)
-    assert all([id in ids for id in session.del_phenotypes(ids)])
+def test_rwd_genotypes(session, genotypes, ids):
+    """Test write, read and delete of genotypes in db"""
+    assert ids == session.add_genotypes(genotypes)
+    assert genotypes == session.get_genotypes(ids)
+    assert all([id in ids for id in session.del_genotypes(ids)])

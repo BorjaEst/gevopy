@@ -3,22 +3,21 @@
 
 from pytest import fixture, mark
 
-from gevopy import algorithms, genetics
+from gevopy import algorithms, genetics, tools
 from gevopy.tools import crossover, mutation, selection
 
 
 # Module fixtures ---------------------------------------------------
 @fixture(scope="class", autouse=True)
-def score_phenotypes(population):
-    """Fixture to add a score to a population of phenotypes"""
-    for index, phenotype in enumerate(population):
-        phenotype.score = index
+def genotypes_pool(population):
+    """Fixture to add a score to a population of genotypes"""
+    return tools.Pool([tools.PoolItem(*x) for x in enumerate(population)])
 
 
 @fixture(scope="class")
-def result(algorithm, population):
+def result(algorithm, genotypes_pool):
     """Fixture to run an algorithm cycle and return result"""
-    return algorithm(population)
+    return algorithm(genotypes_pool)
 
 
 # Requirements ------------------------------------------------------
@@ -55,22 +54,22 @@ class ExecutionRequirements:
 
     @mark.parametrize("survival_rate", [0.0], indirect=True)
     def test_no_ids_keep(self, result, population):
-        """Test algorithm return phenotypes are completelly new"""
+        """Test algorithm return genotypes are completelly new"""
         assert not any(x in population for x in result)
 
     @mark.parametrize("survival_rate", [0.5], indirect=True)
     def test_some_ids_change(self, result, population):
-        """Test algorithm return phenotypes has new members"""
+        """Test algorithm return genotypes has new members"""
         assert not all(x in population for x in result)
 
     @mark.parametrize("survival_rate", [0.5], indirect=True)
     def test_some_ids_keep(self, result, population):
-        """Test algorithm return phenotypes are completelly new"""
+        """Test algorithm return genotypes are completelly new"""
         assert any(x in population for x in result)
 
     @mark.parametrize("survival_rate", [1.0], indirect=True)
     def test_all_ids_keep(self, result, population):
-        """Test algorithm returns no new phenotypes"""
+        """Test algorithm returns no new genotypes"""
         assert all(x in population for x in result)
 
 
@@ -100,7 +99,7 @@ class StdParameters:
 
     @fixture(scope="class", params=[0.2, 0.6])
     def survival_rate(self, request):
-        """Parametrization to assign the number of phenotypes to survive"""
+        """Parametrization to assign the number of genotypes to survive"""
         return request.param
 
 

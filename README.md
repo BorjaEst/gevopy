@@ -19,9 +19,9 @@ This package is designed in order to create your own evolution scripts based on 
  - **Chromosomes**: Genetic instructions for phenotypes.
  - **Genotype**: Genetic design to instantiate phenotypes.
  - **Phenotypes**: Genotype instances which perform a task.
- - **Fitness**: Provide the methods to evaluate phenotypes.
+ - **Fitness**: Provide the methods to evaluate genotypes.
  - **Algorithm**: Evolution procedure for phenotypes.
- - **Experiment**: Evolution session with phenotypes.
+ - **Experiment**: Evolution session with genotypes.
 
 Now the following sections will introduce a fast initialization to the package.
 Do not hesitate to extend your knowledge by using all the additional provided
@@ -87,9 +87,9 @@ instance of the defined class. You can use the init arguments `cache` and
 from gevopy import fitness
 
 class MyFitness(fitness.FitnessModel):
-    def score(self, phenotype):
-        x1 = phenotype.chromosome_1.count(1)
-        x2 = phenotype.chromosome_2.count(0)
+    def score(self, genotype):
+        x1 = genotype.chromosome_1.count(1)
+        x2 = genotype.chromosome_2.count(0)
         return x1 - x2
 
 MyFitness(cache=True, scheduler="threads")
@@ -103,7 +103,7 @@ MyFitness(cache=True, scheduler="threads")
 
 
 > You can additionally define `setup` as method to execute once at the begining
-of each generation before phenotypes are evaluated.
+of each generation before genotypes are evaluated.
 
 > The only accepted values for scheduler are `synchronous`, `threads` and `processes`.
 By default `threads` is used.
@@ -115,7 +115,7 @@ existing templates. Algorithms are generally composed by 4 components:
  - **Selection**: Callable which provides the first list of candidates.
  - **Mating**: Callable which provides the second list of candidates.
  - **Crossover**: Callable to generate offspring from candidates.
- - **Mutation**: Callable to mutate phenotype's chromosomes.
+ - **Mutation**: Callable to mutate genotype's chromosomes.
 
 Additionally, each algorithm template might contain additional arguments such a
 `survival_rate` or `similarity`. Make sure you read and understand each of the 
@@ -147,13 +147,13 @@ templates and utilities to simplify your algorithm definition.
 
 ### Experiment
 The experiment is the final expression of your evolutionary algorithm.
-it provides the methods to evolve and store phenotypes. Once an experiment
+it provides the methods to evolve and store genotypes. Once an experiment
 is instantiated, use the method `run` to force the evolution of the population
 until a desired state.
 
 The results of the experiment can be collected from the method output, calling
 `best` method or adding a [Neo4j]() connection as `database` input when
-instantiating the experiment to store all phenotypes during the execution.
+instantiating the experiment to store all genotypes during the execution.
 
 
 ```python
@@ -161,7 +161,7 @@ import gevopy as ea
 
 experiment = ea.Experiment()
 with experiment.session() as session:
-    session.add_phenotypes([MyGenotype() for _ in range(20)])
+    session.add_genotypes([MyGenotype() for _ in range(20)])
     session.algorithm = MyAlgorithm(survival_rate=0.2)
     session.fitness = MyFitness(cache=True, scheduler="synchronous")
     statistics = session.run(max_generation=20, max_score=10)
@@ -172,7 +172,7 @@ statistics
 
     Evolutionary algorithm execution report:
       Executed generations: 12
-      Best phenotype: 7b13630f-d07c-4ff6-8be1-df6d6ceb06ca
+      Best genotype: 7b13630f-d07c-4ff6-8be1-df6d6ceb06ca
       Best score: 10
 
 
@@ -197,7 +197,7 @@ be performed with no index lookups leading to much better performance.
 Pydantic supports validation of fields during and after the
 initialization process and makes parsing easier. 
 Parsing is a relevant step if you are planing to save your
-phenotypes into the connected database.
+genotypes into the connected database.
 
 ### Limitations
 Collections containing collections can not be stored in properties.

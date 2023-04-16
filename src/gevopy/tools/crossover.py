@@ -29,20 +29,20 @@ class Crossover(ABC):
     to the crossover that happens during sexual reproduction in biology.
     """
 
-    def __call__(self, phenotype_1, phenotype_2):
-        """Executes the crossover between phenotypes.
-        :param phenotype_1: First phenotype to apply crossover
-        :param phenotype_2: Second phenotype to apply crossover
-        :return: Crossover phenotypes
+    def __call__(self, genotype_1, genotype_2):
+        """Executes the crossover between genotypes.
+        :param genotype_1: First genotype to apply crossover
+        :param genotype_2: Second genotype to apply crossover
+        :return: Crossover genotypes
         """
-        match (phenotype_1, phenotype_2):
-            case _ if not isinstance(phenotype_1, genetics.GenotypeModel):
-                raise ValueError("Expected 'GenotypeModel' for 'phenotype_1'")
-            case _ if not isinstance(phenotype_2, genetics.GenotypeModel):
-                raise ValueError("Expected 'GenotypeModel' for 'phenotype_2'")
+        match (genotype_1, genotype_2):
+            case _ if not isinstance(genotype_1, genetics.GenotypeModel):
+                raise ValueError("Expected 'GenotypeModel' for 'genotype_1'")
+            case _ if not isinstance(genotype_2, genetics.GenotypeModel):
+                raise ValueError("Expected 'GenotypeModel' for 'genotype_2'")
 
-        parents = phenotype_1, phenotype_2  # Short code
-        children = tuple(phenotype.clone() for phenotype in parents)
+        parents = genotype_1, genotype_2  # Short code
+        children = tuple(genotype.clone() for genotype in parents)
         parents_id = [ph.id for ph in parents]
         generation = max(0, *[x.generation for x in parents]) + 1
 
@@ -50,15 +50,15 @@ class Crossover(ABC):
             child.generation = generation
             child.parents = parents_id
 
-        if phenotype_1 != phenotype_2:  # Cross only if different parents
+        if genotype_1 != genotype_2:  # Cross only if different parents
             self.cross_features(*[x.__dict__.values() for x in children])
         return children
 
     def cross_features(self, features_1, features_2):
-        """Recursively crosses phenotype features. For example a list of
+        """Recursively crosses genotype features. For example a list of
         diploids in the case of Eucaryote genotype.
-        :param features_1: Phenotype 1 list of feature values
-        :param features_2: Phenotype 2 list of feature values
+        :param features_1: genotype 1 list of feature values
+        :param features_2: genotype 2 list of feature values
         """
         for values in zip(features_1, features_2):
             if all(isinstance(v, genetics.Chromosome) for v in values):
@@ -88,8 +88,8 @@ class Crossover(ABC):
 
 
 class Uniform(Crossover):
-    """Executes uniform point crossover on the input phenotypes chromosomes.
-    Phenotype chromosomes are crossed on equal indexes. The resulting
+    """Executes uniform point crossover on the input genotypes chromosomes.
+    genotype chromosomes are crossed on equal indexes. The resulting
     chromosomes will respectively have the length of the other.
     """
 
@@ -117,8 +117,8 @@ class Uniform(Crossover):
 
 
 class MultiPoint(Crossover):
-    """Executes a multiple point crossover on the input phenotypes chromosomes.
-    Phenotype chromosomes are crossed on equal indexes. The resulting
+    """Executes a multiple point crossover on the input genotypes chromosomes.
+    genotype chromosomes are crossed on equal indexes. The resulting
     chromosomes will respectively have the length of the other.
     """
 
@@ -147,8 +147,8 @@ class MultiPoint(Crossover):
 
 
 class OnePoint(MultiPoint):
-    """Executes a one point crossover on the input phenotypes chromosomes.
-    Phenotype chromosomes are crossed on equal indexes. The resulting
+    """Executes a one point crossover on the input genotypes chromosomes.
+    genotype chromosomes are crossed on equal indexes. The resulting
     chromosomes will respectively have the length of the other.
     """
 
@@ -158,8 +158,8 @@ class OnePoint(MultiPoint):
 
 
 class TwoPoint(MultiPoint):
-    """Executes a two point crossover on the input phenotypes chromosomes.
-    Phenotype chromosomes are crossed on equal indexes. The resulting
+    """Executes a two point crossover on the input genotypes chromosomes.
+    genotype chromosomes are crossed on equal indexes. The resulting
     chromosomes will respectively have the length of the other.
     """
 

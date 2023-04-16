@@ -33,7 +33,8 @@ def experiment(db_interface):
 @fixture(scope="class")
 def execution(session, max_generation, max_score):
     """Fixture to run an experiment session and return execution"""
-    return session.run(max_generation=max_generation, max_score=max_score)
+    config = {"max_generation": max_generation, "max_score": max_score}
+    return session.run(end_conditions=config)
 
 
 # Requirements ------------------------------------------------------
@@ -83,7 +84,7 @@ class ErrRequirements:
     def test_unknown_args(self, session, max_score):
         """Test score attr returns float/int after first execution"""
         with raises(TypeError):
-            session.run(unknown_kwarg="something", max_score=max_score)
+            session.run(dict(max_score=max_score), unknown_kwarg="something")
 
 
 # Parametrization ---------------------------------------------------
@@ -94,16 +95,8 @@ class TestSessions(AttrRequirements, ExecRequirements, ErrRequirements):
     def session(self, experiment, population, algorithm, fitness):
         """Fixture to open and return an experiment session for evolution"""
         with experiment.session() as session:
-            session.add_phenotypes(population)
+            session.add_genotypes(population)
             session.algorithm = algorithm()
             session.fitness = fitness()
             yield session
             session.del_experiment()
-
-    def test_reset_score(self, session):
-        """Test reset_score resets phenotype scores"""
-        session.run(max_generation=1)
-        assert hasattr(session, "reset_score")
-        assert ismethod(session.reset_score)
-        session.reset_score()
-        assert all(x.score is None for x in session._population)

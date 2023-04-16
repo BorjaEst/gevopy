@@ -21,15 +21,9 @@ def scheduler(request):
 
 
 @fixture(scope="class")
-def scores(population, use_fitness):
-    """Fixture to return population scores"""
-    return [ph.score for ph in population]
-
-
-@fixture(scope="class", autouse=True)
-def use_fitness(evaluator, population):
-    """Fixture to run fitness evaluation on the phenotypes population"""
-    evaluator(population)
+def pool(evaluator, population):
+    """Fixture to run fitness evaluation on the genotypes population"""
+    return evaluator(population)
 
 
 # Requirements ------------------------------------------------------
@@ -50,24 +44,17 @@ class AttrRequirements:
 class ExecutionRequirements:
     """Tests group for Fitness execution features"""
 
-    def test_score_result(self, population):
-        """Test all evaluated phenotypes have a float score attr"""
-        assert all(hasattr(p, "score") for p in population)
-        assert all(isinstance(p.score, float) for p in population)
-
     @mark.parametrize("use_cache", [False], indirect=True)
-    def test_no_cache(self, evaluator, population, scores):
-        """Test when cache=False phenotypes are reevaluated"""
-        evaluator(population)  # Run fitness a second round
-        assert scores != [ph.score for ph in population]
+    def test_no_cache(self, evaluator, population, pool):
+        """Test when cache=False genotypes are reevaluated"""
+        assert pool.scores != evaluator(population).scores
 
     @mark.parametrize("use_cache", [True], indirect=True)
-    def test_run_cache(self, evaluator, population, scores):
-        """Test when cache=True phenotypes are not reevaluated"""
-        evaluator(population)  # Run fitness a second round
-        assert scores == [ph.score for ph in population]
+    def test_run_cache(self, evaluator, population, pool):
+        """Test when cache=True genotypes are not reevaluated"""
+        assert pool.scores == evaluator(population).scores
 
-    def test_setup_executed(self, evaluator):
+    def test_setup_executed(self, evaluator, pool):
         """Test set up function is executed before evaluation"""
         assert hasattr(evaluator, "executed")
 

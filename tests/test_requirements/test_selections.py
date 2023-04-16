@@ -5,32 +5,26 @@ from inspect import signature
 
 from pytest import fixture, mark
 
-from gevopy.tools import Pool, selection
+from gevopy import tools
+from gevopy.tools import selection
 
 
 # Module fixtures ---------------------------------------------------
-@fixture(scope="class", autouse=True)
-def score_phenotypes(population):
-    """Fixture to add a score to a population of phenotypes"""
-    for index, phenotype in enumerate(population):
-        phenotype.score = index
-
-
 @fixture(scope="class")
 def pool(population):
-    """Fixture to return a pool of phenotypes"""
-    return Pool(population)
+    """Fixture to return a pool of genotypes"""
+    return tools.Pool([tools.PoolItem(*x) for x in enumerate(population)])
 
 
 @fixture(scope="class", params=[0, 1, 5, 20])
 def selection_size(request):
-    """Parametrization for the number of phenotypes to select"""
+    """Parametrization for the number of genotypes to select"""
     return request.param
 
 
 @fixture(scope="class")
 def selected(selection, pool, selection_size):
-    """Fixture to return a selection of phenotypes"""
+    """Fixture to return a selection of genotypes"""
     return selection(pool, selection_size)
 
 
@@ -51,9 +45,9 @@ class ExecutionRequirements:
         """Test returned list length matches the selection size"""
         assert len(selected) == selection_size
 
-    def test_selected_from_pool(self, selected, pool):
+    def test_selected_from_pool(self, selected, population):
         """Test all returned objects come from the original pool"""
-        assert all(x in pool for x in selected)
+        assert all(x in population for x in selected)
 
 
 # Parametrization ---------------------------------------------------
@@ -67,7 +61,7 @@ class TestPonderated(AttrRequirements, ExecutionRequirements):
 
     @mark.skip(reason="TODO: Help needed for asserts")
     def test_selected(self, selected, pool):  # pylint: disable=unused-argument
-        """Tests the correct selection of phenotypes"""
+        """Tests the correct selection of genotypes"""
         assert NotImplementedError
 
 
@@ -81,7 +75,7 @@ class TestUniform(AttrRequirements, ExecutionRequirements):
 
     @mark.skip(reason="TODO: Help needed for asserts")
     def test_selected(self, selected, pool):  # pylint: disable=unused-argument
-        """Tests the correct selection of phenotypes"""
+        """Tests the correct selection of genotypes"""
         assert NotImplementedError
 
 
@@ -94,8 +88,8 @@ class TestBest(AttrRequirements, ExecutionRequirements):
         return selection.Best()
 
     def test_selected(self, selected, pool):
-        """Tests the correct selection of phenotypes"""
-        assert all(ph == pool[0] for ph in selected)
+        """Tests the correct selection of genotypes"""
+        assert all(ph == pool[0].item for ph in selected)
 
 
 class TestWorst(AttrRequirements, ExecutionRequirements):
@@ -107,8 +101,8 @@ class TestWorst(AttrRequirements, ExecutionRequirements):
         return selection.Worst()
 
     def test_selected(self, selected, pool):
-        """Tests the correct selection of phenotypes"""
-        assert all(ph == pool[-1] for ph in selected)
+        """Tests the correct selection of genotypes"""
+        assert all(ph == pool[-1].item for ph in selected)
 
 
 class TestTournaments(AttrRequirements, ExecutionRequirements):
@@ -126,5 +120,5 @@ class TestTournaments(AttrRequirements, ExecutionRequirements):
 
     @mark.skip(reason="TODO: Help needed for asserts")
     def test_selected(self, selected, pool):  # pylint: disable=unused-argument
-        """Tests the correct selection of phenotypes"""
+        """Tests the correct selection of genotypes"""
         assert NotImplementedError

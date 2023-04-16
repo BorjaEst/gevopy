@@ -29,9 +29,9 @@ module_logger = logging.getLogger(__name__)
 class Algorithm(BaseModel, ABC):
     """Base abstract class for algorithms generation and identification.
     An algorithm is composed generally by at least 3 components:
-     - Selection: Tool to select phenotypes
-     - Crossover: Tool to crossover phenotypes
-     - Mutation: Tool to mutate phenotypes
+     - Selection: Tool to select genotypes
+     - Crossover: Tool to crossover genotypes
+     - Mutation: Tool to mutate genotypes
 
     This components can be assigned to an algorithm class by Inheritance
     using the provided classes `Has<Attribute>`. Instances from an algorithm
@@ -44,7 +44,7 @@ class Algorithm(BaseModel, ABC):
 
     When an algoritm has the property crossover, you can usually configure
     a second `selection` argument `selection2` to control how the algorithm
-    selects the secondary phenotype.
+    selects the secondary genotype.
     """
 
     class Config:
@@ -59,55 +59,55 @@ class Algorithm(BaseModel, ABC):
         """
         return logging.getLogger(f"{self.__class__}")
 
-    def __call__(self, population):
+    def __call__(self, pool):
         """Executes the algorithm to return a population offspring.
-        :param population: List of phenotypes
-        :returns: A list of varied phenotypes
+        :param population: List of genotypes
+        :returns: A pool of varied genotypes
         """
-        return self.run_cycle(tools.Pool(population))
+        return self.run_cycle(pool)
 
     @abstractmethod
-    def run_cycle(self, phenotypes):
+    def run_cycle(self, genotypes):
         """Executes an algorithm cyle to return a population offspring.
-        :param phenotypes: Pool of ordered phenotypes by score
-        :returns: A list of varied phenotypes
+        :param genotypes: Pool of ordered genotypes by score
+        :returns: A list of varied genotypes
         """
         raise NotImplementedError
 
 
 class HasSelection1(Algorithm):
-    """Extend class Algorithm with a second selection round of phenotypes."""
+    """Extend class Algorithm with a second selection round of genotypes."""
     selection1: Selection
 
     def __init__(self, **data) -> None:
         """Generic constructor for genetic algorithms."""
         super().__init__(**data)
 
-    def select(self, phenotypes, n):
-        """Extends algorithm call method with phenotypes selection operation.
-        :param phenotypes: Pool of evaluated phenotypes
-        :param n: Number of phenotype to select from pool
-        :returns: A list of varied phenotypes
+    def select(self, genotypes, n):
+        """Extends algorithm call method with genotypes selection operation.
+        :param genotypes: Pool of evaluated genotypes
+        :param n: Number of genotype to select from pool
+        :returns: A list of varied genotypes
         """
         self.logger.debug("selection1:\t%s", self.selection1)
-        selected1 = self.selection1(phenotypes, n)
+        selected1 = self.selection1(genotypes, n)
         self.logger.debug("selection1=\t%s", selected1)
         return selected1
 
 
 class HasSelection2(HasSelection1, Algorithm):
-    """Extend class Algorithm with a second selection round of phenotypes."""
+    """Extend class Algorithm with a second selection round of genotypes."""
     selection2: Selection
 
-    def select(self, phenotypes, n):
-        """Extends algorithm call method with phenotypes selection operation.
-        :param phenotypes: Pool of evaluated phenotypes
-        :param n: Number of phenotype to select from pool
-        :returns: A list of varied phenotypes
+    def select(self, genotypes, n):
+        """Extends algorithm call method with genotypes selection operation.
+        :param genotypes: Pool of evaluated genotypes
+        :param n: Number of genotype to select from pool
+        :returns: A list of varied genotypes
         """
-        selected1 = super().select(phenotypes, n)
+        selected1 = super().select(genotypes, n)
         self.logger.debug("selection2:\t%s", self.selection2)
-        selected2 = self.selection2(phenotypes, n)
+        selected2 = self.selection2(genotypes, n)
         self.logger.debug("selection2=\t%s", selected2)
         return selected1, selected2
 
@@ -117,10 +117,10 @@ class HasCrossover(HasSelection2, Algorithm):
     crossover: Crossover
 
     def cross(self, selected1, selected2):
-        """Extends algorithm call method with phenotypes crossover operation.
-        :param selected1: List 1 of phenotypes to cross
-        :param selected2: List 2 of phenotypes to cross
-        :returns: A list of varied phenotypes
+        """Extends algorithm call method with genotypes crossover operation.
+        :param selected1: List 1 of genotypes to cross
+        :param selected2: List 2 of genotypes to cross
+        :returns: A list of varied genotypes
         """
         self.logger.debug("crossover:\t%s", self.crossover)
         selections = zip(selected1, selected2)
@@ -133,13 +133,13 @@ class HasMutation(HasSelection1, Algorithm):
     """Extend class Algorithm with mutation properties and methods."""
     mutation: Mutation
 
-    def mutate(self, phenotypes):
-        """Extends algorithm call method with phenotypes mutation operation.
-        :param phenotypes: List of evaluated phenotypes
-        :returns: A list of varied phenotypes
+    def mutate(self, genotypes):
+        """Extends algorithm call method with genotypes mutation operation.
+        :param genotypes: List of evaluated genotypes
+        :returns: A list of varied genotypes
         """
         self.logger.debug("mutation:\t%s", self.mutation)
-        offspring = [self.mutation(phenotype) for phenotype in phenotypes]
+        offspring = [self.mutation(genotype) for genotype in genotypes]
         self.logger.debug("offspring=\t%s", offspring)
         return offspring
 
@@ -147,20 +147,20 @@ class HasMutation(HasSelection1, Algorithm):
 class HasSurvivalRate(HasSelection1, Algorithm):
     """Extend class Algorithm with survival properties and methods. When
     subclassing this methods, the algorithm protects the most performant
-    phenotypes from the previous generation.
+    genotypes from the previous generation.
     """
     survival_rate: float = 0.4
 
-    def skim(self, phenotypes):
-        """Extends algorithm call method to protect a ratio of phenotypes.
-        :param phenotypes: List of evaluated phenotypes
-        :returns: A tuple with survivors and discarted phenotypes
+    def skim(self, genotypes):
+        """Extends algorithm call method to protect a ratio of genotypes.
+        :param genotypes: List of evaluated genotypes
+        :returns: A tuple with survivors and discarted genotypes
         """
         self.logger.debug("survival_rate:\t%s", self.survival_rate)
-        n_survivors = math.ceil(len(phenotypes) * self.survival_rate)
-        survivors = phenotypes[:n_survivors]
+        n_survivors = math.ceil(len(genotypes) * self.survival_rate)
+        survivors = genotypes[:n_survivors]
         self.logger.debug("survivors=\t%s", survivors)
-        return survivors, phenotypes[n_survivors:]
+        return survivors, genotypes[n_survivors:]
 
 
 class Standard(HasSurvivalRate, HasCrossover, HasMutation, Algorithm):
@@ -168,23 +168,23 @@ class Standard(HasSurvivalRate, HasCrossover, HasMutation, Algorithm):
 
     First, a selection procedure is applied to replace a fraction of the
     population with deep copies of the parental population. Second, applies
-    crossover between selected copies, generating new phenotypes. Third,
-    applies mutation to crossover offspring, generating new phenotypes.
+    crossover between selected copies, generating new genotypes. Third,
+    applies mutation to crossover offspring, generating new genotypes.
 
-    Before the selection procedure, the percentage of phenotypes with lowest
-    score defined by (1.0 - `survival_rate`) are removed. Phenotypes filtered
+    Before the selection procedure, the percentage of genotypes with lowest
+    score defined by (1.0 - `survival_rate`) are removed. genotypes filtered
     by the survival process are replaced by a selection of survivors.
     """
     # pylint: disable=too-many-arguments
 
-    def run_cycle(self, phenotypes):
+    def run_cycle(self, pool):
         """Execution entry point for the algorithm.
-        :param phenotypes: List of evaluated phenotypes
-        :returns: A list of varied phenotypes
+        :param pool: List of evaluated genotypes
+        :returns: A list of varied genotypes
         """
-        self.logger.debug("survival_phenotypes=\t%s", phenotypes)
-        survivors, rest = self.skim(phenotypes)
-        selected1, selected2 = self.select(phenotypes, len(rest))
+        self.logger.debug("survival_genotypes=\t%s", pool)
+        survivors, rest = self.skim(pool.items)
+        selected1, selected2 = self.select(pool, len(rest))
         offspring = self.cross(selected1, selected2)
         offspring = self.mutate(offspring)
         self.logger.debug("simple_offspring=\t%s", offspring)
