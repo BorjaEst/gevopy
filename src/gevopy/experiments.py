@@ -3,7 +3,7 @@ needed to execute the defined evolutionary algorithms.
 
 The main class Experiment allows the user to create an object where
 to group all the definitions in order to prepare them for execution.
-It allows to create context session where phenotypes can be added and
+It allows to create context session where genotypes can be added and
 parameters can be modified.
 
 Session method `run` triggers the execution of the evolution process
@@ -16,15 +16,16 @@ import logging
 import uuid
 from typing import List
 
-from pydantic import BaseModel, Extra, Field, PrivateAttr
+from pydantic import BaseModel, Extra, Field, PrivateAttr, root_validator
+from pydantic.types import PositiveInt
 
 import gevopy.algorithms
 import gevopy.database
 import gevopy.fitness
 import gevopy.tools
-from gevopy.database import EmptyInterface
-from gevopy.fitness import FitnessModel
-from gevopy.genetics import GenotypeModel
+from gevopy.algorithms import Algorithm
+from gevopy.database import EmptyInterface, SessionContainer
+from gevopy.fitness import FitnessModel as Fitness
 from gevopy.tools import crossover, mutation, selection
 
 # https://docs.python.org/3/howto/logging-cookbook.html
@@ -80,29 +81,29 @@ class Experiment(BaseModel):
         self.database.close(*args, **kwds)
 
 
-class Session(BaseModel):
+class Session():
     """Base class for evolution experiment sessions.
     Provides the essential attributes to prepare the execution conditions.
     :param experiment: Experiment name the session is linked with
-    :param fitness: Fitness instance to evaluate phenotypes
-    :param algorithm: Algorithm instance to evolve phenotypes
-    :param database: Database interface session,
+    :param fitness: Fitness instance to evaluate genotypes
+    :param algorithm: Algorithm instance to evolve genotypes
+    :param database: Database interface session
     """
-    experiment: Experiment
-    fitness: gevopy.fitness.FitnessModel = None
-    algorithm: gevopy.algorithms.Algorithm = DEFAULT_ALGORITHM
-    database: gevopy.database.SessionContainer
-    _logger: logging.Logger = PrivateAttr()
-    _population: List[GenotypeModel] = PrivateAttr(default=[])
 
-    class Config:
-        # pylint: disable=missing-class-docstring
-        arbitrary_types_allowed = True
-
-    def __init__(self, experiment, **data):
-        super().__init__(experiment=experiment, **data)
+    def __init__(
+        self,
+        experiment: Experiment,
+        database: SessionContainer,
+        algorithm: Algorithm = DEFAULT_ALGORITHM,
+        fitness: Fitness = None,
+    ):
         self._logger = logging.getLogger(f"{__package__}.Experiment")
         self._logger = self.Logger(self._logger, {"exp": experiment})
+        self.experiment = experiment
+        self.database = database
+        self.algorithm = algorithm
+        self.fitness = fitness
+        self.population = []
 
     class Logger(logging.LoggerAdapter):
         # pylint: disable=missing-class-docstring
@@ -116,142 +117,69 @@ class Session(BaseModel):
         """
         return self._logger
 
-    def save_phenotypes(self, phenotypes):
-        """Saves the phenotypes to the experiment database.
-        :param phenotypes: List of phenotypes to add to the experiment
-        """
-        if any(not isinstance(x, GenotypeModel) for x in phenotypes):
-            raise ValueError("Phenotypes must inherit from GenotypeModel")
-        iserial_phenotypes = (p.dict(serialize=True) for p in phenotypes)
-        self.database.add_phenotypes(iserial_phenotypes)  # Iter to speed up
-
-    def add_phenotypes(self, phenotypes, save=True):
-        """Adds phenotypes to the experiment session population.
-        :param phenotypes: List of phenotypes to add to the experiment
+    def add_genotypes(self, genotypes, save=True):
+        """Adds genotypes to the experiment session population.
+        :param genotypes: List of genotypes to add to the experiment
         :param save: Flag to save new population status in database
         """
-        for phenotype in phenotypes:  # Add experiment to phenotypes
-            phenotype.experiment = self.experiment.name
+        for genotype in genotypes:  # Add experiment to genotypes
+            genotype.experiment = self.experiment.name
         if save:
-            self.save_phenotypes(phenotypes)
-        self._population += phenotypes
+            save_genotypes(session=self)
+        self.population += genotypes
 
-    def get_phenotypes(self):
-        """Gets population phenotypes from the experiment session.
-        :return: Pool with experiment session phenotypes
+    def get_genotypes(self):
+        """Gets population genotypes from the experiment session.
+        :return: List of genotypes stored in session
         """
-        return gevopy.tools.Pool(self._population)
+        return self.population
 
     def del_experiment(self):
-        """Deletes the experiment phenotypes and data. Also in database.
+        """Deletes the experiment genotypes and data. Also in database.
         """
         self.database.del_experiment(name=self.experiment.name)
-        self._population = []
+        self.population = []
 
-    def eval_phenotypes(self, fitness, save=True):
-        """Executes the fitness evaluation on the session population.
-        :param algorithm: Algorithm to run each execution generation cycle
-        :param save: Flag to save new population status in database
+    def run(self, end_conditions: dict,  hall_size: PositiveInt = 3):
+        """Executes evolution algorithm inside the object session.
+        Note that if neither of the conditions is defined, the constructor
+        raises ValidationError for required valid end conditions.
+        :param end_conditions: See 'EndConditions' arguments
+        :param hall_size: Number of genotypes to store in the hall of fame
         """
-        if not isinstance(fitness, FitnessModel):
-            raise ValueError("Expected 'FitnessModel' type for 'fitness'")
-        fitness(self._population)
-        if save:
-            self.save_phenotypes(self._population)
-
-    def generate_offspring(self, algorithm, save=True):
-        """Replaces population with offspring generated from algorithm.
-        :param algorithm: Algorithm to run for producing the offspring
-        :param save: Flag to save new population status in database
-        """
-        if not isinstance(algorithm, gevopy.algorithms.Algorithm):
-            raise ValueError("Expected 'Algorithm' type for 'algorithm'")
-        self._population = algorithm(self._population)
-        if save:
-            self.save_phenotypes(self._population)
-
-    def reset_score(self, save=True):
-        """Resets the score of the current population of phenotypes.
-        :param save: Flag to save new population status in database
-        """
-        for phenotype in self._population:
-            phenotype.score = None
-        if save:
-            self.save_phenotypes(self._population)
-
-    def run(self, max_generation=None, max_score=None):
-        """Executes the algorithm until a stop condition is met.
-        :param max_generation: The maximum number of loops to run
-        :param max_score: The score required to stop the evolution
-        :return: Generated Execution instance
-        """
-        if (max_generation is None) and (max_score is None):
-            raise ValueError('Either max_generation or max_score is required')
-        if max_generation and not isinstance(max_generation, int):
-            raise TypeError('Expected positive int for max_generation')
-        if max_generation and max_generation < 0:
-            raise ValueError('Expected positive int for max_generation')
-        if max_score and not isinstance(max_score, (float, int)):
-            raise TypeError('Expected int or float for max_score')
-
-        execution = Execution(experiment=self.experiment)
-        logger = execution._logger
-
-        try:
-            logger.info("Start of evolutionary experiment execution")
-            self.eval_phenotypes(self.fitness, save=True)  # Evaluate 1st pop
-            execution.halloffame.update(self.get_phenotypes())
-            while not execution.completed(max_generation, max_score):
-                execution.generation += 1  # Increase generation index
-                self.generate_offspring(self.algorithm, save=False)
-                self.eval_phenotypes(self.fitness, save=True)
-                execution.halloffame.update(self.get_phenotypes())
-                logger.info("Completed cycle; %s", execution.best_score)
-        except KeyboardInterrupt:
-            logger.error("Experiment cancelled by the user 'CTRL+C'")
-            return execution
-        except Exception as err:
-            logger.error("Error %s raised during experiment execution", err)
-            raise err
-        else:
-            logger.info("Experiment execution completed successfully")
-            return execution
+        return execute_evolution(
+            session=self,
+            end_conditions=EndConditions(**end_conditions),
+            halloffame=gevopy.tools.HallOfFame(maxsize=hall_size),
+            pool=gevopy.tools.Pool(iterable=[]),
+        )
 
 
-class Execution(BaseModel):
+class Execution(BaseModel, extra=Extra.forbid):
     """Base class for evolution algorithm execution. This class uses an
     experiment session to run evolution cycles and generations on a population
-    of phenotypes. It also includes statistics about the execution process.
-
-    Note that if neither max_generation or max_score are defined, the
-    constructor raises ValueError for required valid end conditions.
+    of genotypes. It also includes statistics about the execution process.
     """
     halloffame: gevopy.tools.HallOfFame = gevopy.tools.HallOfFame(3)
+    pool: gevopy.tools.Pool
     generation: int = 0
-    _logger: logging.Logger = PrivateAttr()
 
-    def __init__(self, experiment):
-        super().__init__()
-        logger_data = {"exp": experiment.name, "exe": self}
-        self._logger = logging.getLogger(f"{__package__}.Experiment")
-        self._logger = self.Logger(self._logger, logger_data)
-
-    class Config:
+    class Logger(logging.LoggerAdapter):
         # pylint: disable=missing-class-docstring
-        # pylint: disable=too-few-public-methods
-        extra = Extra.forbid
+        def process(self, msg, kwargs):
+            return f"[gen:{self.extra['exe'].generation}]: {msg}", kwargs
 
     def __repr__(self) -> str:
         return (
             "Evolutionary algorithm execution report:\n"
             f"  Executed generations: {self.generation}\n"
-            f"  Best phenotype: {self.halloffame[0].id}\n"
+            f"  Best genotype: {self.halloffame[0].item.id}\n"
             f"  Best score: {self.best_score}\n"
         )
 
     @property
     def best_score(self):
-        """Best score reached by the evaluated phenotypes during the run.
+        """Best score reached by the evaluated genotypes during the run.
         :return: Float (not only positive)
         """
         try:  # If not started, halloffame is empty and raises IndexError
@@ -259,21 +187,113 @@ class Execution(BaseModel):
         except IndexError:  # Empty if not started
             return None
 
-    class Logger(logging.LoggerAdapter):
-        # pylint: disable=missing-class-docstring
-        def process(self, msg, kwargs):
-            return f"[gen:{self.extra['exe'].generation}]: {msg}", kwargs
+    @property
+    def worse_score(self):
+        """Worst score stored in the evaluated hall of fame during the run.
+        :return: Float (not only positive)
+        """
+        try:  # If not started, halloffame is empty and raises IndexError
+            return self.halloffame[-1].score
+        except IndexError:  # Empty if not started
+            return None
 
-    def completed(self, max_generation, max_score):
+
+class EndConditions(BaseModel, extra=Extra.forbid):
+    """Class to validate and define the end conditions for an experiment
+    session execution. 
+    :param max_generation: The maximum number of loops to run
+    :param min_generation: The minimum number of loops to run
+    :param max_score: The best score required to stop the evolution
+    :param min_score: The worst hall of fame required to stop
+    """
+    max_generation: PositiveInt = None
+    min_generation: PositiveInt = None
+    max_score: float = None
+    min_score: float = None
+
+    @root_validator(pre=True)
+    def at_least_one_parameter(cls, values):
+        if any(x in values for x in cls.schema()['properties'].keys()):
+            return values
+        raise ValueError("Undefined end condition")
+
+    def completed(self, execution: Execution):
         """Evaluates if the final generation or required score is reached.
-        :param max_generation: The maximum number of loops to run
-        :param max_score: The score required to stop the evolution
+        :param execution: The session execution to evaluate
         :return: True if evolution conditions are met, False otherwise
         """
-        if max_generation:
-            if self.generation and max_generation <= self.generation:
-                return True
-        if max_score:
-            if self.best_score and max_score <= self.best_score:
-                return True
+        if self.min_generation:
+            if execution.generation < self.min_generation:
+                return False  # Keep running even if score met
+        if self.max_score:
+            if execution.best_score >= self.max_score:
+                return True  # Stop if max score reached
+        if self.min_score:
+            if execution.worse_score >= self.min_score:
+                return True  # Stop if min score reached
+        if self.max_generation:
+            if execution.generation >= self.max_generation:
+                return True  # Stop if max generation reached
         return False  # If any of the defined
+
+
+def save_genotypes(session: Session):
+    """Saves an iterator of genotypes into the session database.
+    :param session: Experiment session where to execute evolution
+    """
+    iserial = (p.dict(serialize=True) for p in session.get_genotypes())
+    session.database.add_genotypes(iserial)  # Iter to speed up
+
+
+def eval_genotypes(session: Session, fitness: Fitness):
+    """Executes the fitness evaluation on the session population.
+    :param session: Experiment session where to execute evolution
+    :param fitness: Fitness object to evaluate genotypes
+    :return: Pool of scores and genotypes
+    """
+    if not isinstance(fitness, Fitness):
+        raise ValueError("Expected 'FitnessModel' type for 'fitness'")
+    return fitness(session.population)
+
+
+def generate_offspring(execution: Execution, algorithm: Algorithm):
+    """Replaces population with offspring generated from algorithm.
+    :param execution: Execution object for the evolution function
+    :param algorithm: Algorithm to run for producing the offspring
+    :return: List of genotypes
+    """
+    if not isinstance(algorithm, gevopy.algorithms.Algorithm):
+        raise ValueError("Expected 'Algorithm' type for 'algorithm'")
+    return algorithm(execution.pool)
+
+
+def execute_evolution(session: Session, end_conditions: EndConditions, **kwds):
+    """Executes an evolution algorithm inside a session.    
+    :param session: Experiment session where to execute evolution
+    :param end_conditions: Conditions to stop evolution process
+    :param kwds: Additional parameters from Execution data model
+    """
+    algorithm, fitness = session.algorithm, session.fitness
+    execution = Execution(**kwds)
+    logger = logging.getLogger(f"{__package__}.Experiment")
+    logger = Execution.Logger(logger, {"session": session, "exe": execution})
+
+    try:  # Try an except to return exection pointer to user
+        logger.info("Start of evolutionary experiment execution")
+        while True:
+            execution.pool = eval_genotypes(session, fitness)
+            execution.halloffame.update(execution.pool)
+            execution.generation += 1  # Increase generation index
+            save_genotypes(session)
+            if end_conditions.completed(execution):
+                logger.info("Experiment execution completed successfully")
+                return execution  # End of evolution process
+            else:
+                logger.info("Completed cycle; %s", execution.best_score)
+                session.population = generate_offspring(execution, algorithm)
+    except KeyboardInterrupt:  # Interrupted by user
+        logger.error("Experiment cancelled by the user 'CTRL+C'")
+        return execution
+    except Exception as error:  # Unexpected exception
+        logger.error("Error %s raised during experiment execution", error)
+        raise error
