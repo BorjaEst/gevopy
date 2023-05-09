@@ -18,7 +18,6 @@
 	"features": {
 		"ghcr.io/devcontainers/features/common-utils:1": { },
 		"ghcr.io/devcontainers/features/git:1": { },
-		"ghcr.io/devcontainers/features/nvidia-cuda:1": { },
 		"ghcr.io/rocker-org/devcontainer-features/pandoc:1": { },
 		"ghcr.io/devcontainers-contrib/features/pylint:1": { },
 		"ghcr.io/devcontainers-contrib/features/tox:1": { }
