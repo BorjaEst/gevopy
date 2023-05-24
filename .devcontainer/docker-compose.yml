@@ -16,12 +16,22 @@ services:
   # Update this with the features of the database service to run together
   database:
     image: neo4j:latest
-    restart: unless-stopped
     volumes:
       - database-data:/data
     # This configures the security level to access the database
     environment:
       NEO4J_AUTH: none
+      NEO4J_DEBUG: true
+
+  # Update this with the features of the database service to run together
+  leaderboard:
+    image: redis:latest
+    volumes:
+      - leaderboard-data:/data
+    # This configures the security level to access the database
+    environment:
+      REDIS_ARGS: --save 60 1 --loglevel debug
 
 volumes:
   database-data:
+  leaderboard-data:
