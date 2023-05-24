@@ -1,0 +1,3 @@
+[submodule "leaderboard-python"]
+	path = leaderboard-python
+	url = https://github.com/BorjaEst/leaderboard-python.git
